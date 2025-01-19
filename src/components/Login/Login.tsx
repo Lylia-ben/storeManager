@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Box, Grid, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
-const Register: React.FC = () => {
+const Login: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const navigate = useNavigate(); // React Router's navigate hook
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -27,20 +31,22 @@ const Register: React.FC = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      const response = await window.electronAPI.authenticateUser({ name, password });
+      await window.electronAPI.authenticateUser({ name, password });
       setSuccess(true);
-      setError(null); // Clear any existing errors
-      alert(`Login successful! Welcome, ${response.name}.`);
+      setError(null);
+      navigate('/main'); // Redirect to /main
     } catch (authError: any) {
       setError(authError.message || 'Authentication failed.');
       setSuccess(false);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Grid container style={{ height: '100vh' }}>
-      {/* Left Side */}
       <Grid
         item
         xs={12}
@@ -61,8 +67,6 @@ const Register: React.FC = () => {
           }}
         />
       </Grid>
-
-      {/* Right Side - Form */}
       <Grid
         item
         xs={12}
@@ -96,14 +100,12 @@ const Register: React.FC = () => {
             Welcome
           </Typography>
 
-          {/* Success Alert */}
           {success && (
             <Alert severity="success" style={{ marginBottom: '20px' }}>
-              Login successful! Welcome, {name}.
+              Login successful! Redirecting...
             </Alert>
           )}
 
-          {/* Error Alert */}
           {error && (
             <Alert severity="error" style={{ marginBottom: '20px' }}>
               {error}
@@ -139,8 +141,9 @@ const Register: React.FC = () => {
                 backgroundColor: '#1e88e5',
                 color: '#ffffff',
               }}
+              disabled={loading}
             >
-              Login
+              {loading ? 'Loading...' : 'Login'}
             </Button>
           </form>
         </Box>
@@ -149,4 +152,4 @@ const Register: React.FC = () => {
   );
 };
 
-export default Register;
+export default Login;

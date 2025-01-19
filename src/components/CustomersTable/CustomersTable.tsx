@@ -20,7 +20,7 @@ interface Customer {
   total: number;
 }
 
-const CustomerTable: React.FC = () => {
+const CustomersTable: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
 
   // Fetch customers on component mount
@@ -96,4 +96,4 @@ const CustomerTable: React.FC = () => {
   );
 };
 
-export default CustomerTable;
+export default CustomersTable;
