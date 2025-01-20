@@ -1,7 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
-import LoginPage from './Pages/LoginPage/LoginPage';
-import MainPage from './Pages/MainPage/MainPage';
+import CustomersTable from './components/CustomersTable/CustomersTable';
+import CustomerProfile from './components/CustomerProfil/CustomerProfil';
+import CreateOrder from './components/CreateOrder/CreateOrder';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -13,8 +14,9 @@ const root = createRoot(rootElement);
 root.render(
   <Router>
     <Routes>
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/main" element={<MainPage/>} />
+      
+      <Route path="/" element={<CustomersTable/>}/>
+      <Route path='/customer/:customerId' element={<CustomerProfile/>}/>
     </Routes>
   </Router>
 );

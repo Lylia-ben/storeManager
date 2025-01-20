@@ -24,8 +24,17 @@ const CustomerSchema = new Schema<ICustomer>(
   {
     name: { type: String, required: true },
     address: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phoneNumber: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+      match: [/^\d{10}$/, 'Phone number must be 10 digits'],
+    },    
     orders: [
       {
         orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },

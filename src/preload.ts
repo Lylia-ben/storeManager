@@ -43,4 +43,16 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   fetchCustomerById: (customerId: string) =>
     ipcRenderer.invoke("customer:fetchById", customerId),
+  // Orders Operations
+  createOrder: (orderData: { products: { productId: string; orderQuantity: number }[] }) =>
+    ipcRenderer.invoke("order:create", orderData),
+
+  // Fetch all orders
+  fetchAllOrders: () => ipcRenderer.invoke("order:fetchAll"),
+
+  // Fetch a specific order by ID
+  fetchOrderById: (orderId: string) => ipcRenderer.invoke("order:fetchById", orderId),
+
+  // Delete an order by ID
+  deleteOrder: (orderId: string) => ipcRenderer.invoke("order:delete", orderId),
 });

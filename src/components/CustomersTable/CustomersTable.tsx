@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -75,7 +76,8 @@ const CustomersTable: React.FC = () => {
                 <Button
                   variant="outlined"
                   color="primary"
-                  onClick={() => console.log(`View profile of ${customer.name}`)}
+                  component={Link}
+                  to={`/customer/${customer.id}`}
                 >
                   View Profile
                 </Button>
