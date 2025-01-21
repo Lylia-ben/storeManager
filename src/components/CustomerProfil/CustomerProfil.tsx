@@ -1,58 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom"; // Import useParams
+import React from "react";
 import { Box, Typography } from "@mui/material";
-import CustomerData from "../CustomerData/CustomerData";
-import OrdersTable from "../OrdersTable/OrdersTable";
-
-interface Order {
-  id: string;
-  total: number;
-  status: string;
-}
-
-interface Customer {
-  id: string;
-  name: string;
-  address: string;
-  email: string;
-  phoneNumber: string;
-  orders: Order[];
-  profileImage: string; // URL for the profile image
-}
+import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import OrderItemsTable from "../OrderItemsTable/OrderItemsTable";
 
 const CustomerProfile: React.FC = () => {
-  const { customerId } = useParams<{ customerId: string }>(); // Extract customerId from the route
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const { id } = useParams<{ id: string }>(); // Access the dynamic ID from the route
+  const orders = useSelector((state: any) => state.orders); // Access orders from Redux store
 
-  useEffect(() => {
-    const fetchCustomerProfile = async () => {
-      if (!customerId) return; // Guard against undefined customerId
-      try {
-        const fetchedCustomer = await window.electronAPI.fetchCustomerById(customerId);
-        setCustomer(fetchedCustomer);
-      } catch (error) {
-        console.error("Error fetching customer profile:", error);
-        alert("Failed to load customer data. Please try again later.");
-      }
-    };
-
-    fetchCustomerProfile();
-  }, [customerId]);
-
-  if (!customer) {
-    return <Typography>Loading customer data...</Typography>;
-  }
+  // Filter orders by the selected customer ID
+  const customerOrders = orders.filter((order: any) => order.customerId === id);
 
   return (
-    <Box p={3}>
-      <CustomerData
-        profileImage={customer.profileImage}
-        name={customer.name}
-        address={customer.address}
-        email={customer.email}
-        phoneNumber={customer.phoneNumber}
+    <Box>
+      <Typography variant="h5">Orders for Customer {id}</Typography>
+      <OrderItemsTable
+        orderItems={customerOrders}
+        onDelete={(orderId) => console.log("Delete order with ID:", orderId)}
       />
-      <OrdersTable orders={customer.orders} />
     </Box>
   );
 };

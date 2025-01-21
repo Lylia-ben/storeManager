@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogActions,
@@ -6,128 +6,120 @@ import {
   DialogTitle,
   TextField,
   Button,
-  Select,
   MenuItem,
+  Select,
   InputLabel,
   FormControl,
+  CircularProgress,
+  SelectChangeEvent,
 } from "@mui/material";
 
-// Define shapes and possible dimensions for each
-const shapeDimensions = {
-  Square: ["Side Length"],
-  Circular: ["Radius"],
-  Rectangular: ["Width", "Height"],
-};
-
-interface AddProductFormProps {
+interface AddOrderItemProps {
   open: boolean;
   onClose: () => void;
   onSave: (product: any) => void;
   availableShapes: string[];
+  availableProducts: any[];
 }
 
-const AddOrderItem: React.FC<AddProductFormProps> = ({
+const AddOrderItem: React.FC<AddOrderItemProps> = ({
   open,
   onClose,
   onSave,
   availableShapes,
+  availableProducts,
 }) => {
-  const [shape, setShape] = useState<string>("");
-  const [dimensions, setDimensions] = useState<{ [key: string]: number }>({});
+  const [selectedShape, setSelectedShape] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
-  const [unitPrice, setUnitPrice] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (shape && shapeDimensions[shape]) {
-      // Initialize dimension fields with default values when the shape changes
-      const newDimensions: { [key: string]: number } = {};
-      shapeDimensions[shape].forEach((dim) => {
-        newDimensions[dim] = 0; // Default value for each dimension
-      });
-      setDimensions(newDimensions);
-    }
-  }, [shape]);
-  
-
-  const handleDimensionChange = (dim: string, value: number) => {
-    setDimensions((prev) => ({
-      ...prev,
-      [dim]: value,
-    }));
+  const handleShapeChange = (event: SelectChangeEvent<string>) => {
+    setSelectedShape(event.target.value);
   };
 
-  const handleSave = () => {
-    const newProduct = {
-      id: Math.random().toString(),
-      name: `Product ${Math.random()}`,
-      shape,
-      dimensions,
-      quantity,
-      unitPrice,
-      totalPrice: quantity * unitPrice,
-    };
-    onSave(newProduct);
-    onClose();
+  const handleProductChange = (event: SelectChangeEvent<string>) => {
+    const selectedProductId = event.target.value;
+    setSelectedProduct(
+      availableProducts.find((product) => product.id === selectedProductId) || null
+    );
+  };
+
+  const handleSaveClick = () => {
+    if (selectedProduct && quantity > 0) {
+      onSave({
+        ...selectedProduct,
+        shape: selectedShape,
+        quantity,
+        totalPrice: selectedProduct.price * quantity,
+      });
+      onClose();
+    } else {
+      alert("Please select a product and a valid quantity.");
+    }
+  };
+
+  const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(Number(event.target.value));
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Add Product</DialogTitle>
+      <DialogTitle>Add Product to Order</DialogTitle>
       <DialogContent>
-        {/* Shape Selector */}
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Shape</InputLabel>
-          <Select
-            value={shape}
-            onChange={(e) => setShape(e.target.value)}
-            label="Shape"
-          >
-            {availableShapes.map((shapeOption) => (
-              <MenuItem key={shapeOption} value={shapeOption}>
-                {shapeOption}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <>
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="shape-select-label">Select Shape</InputLabel>
+              <Select
+                labelId="shape-select-label"
+                value={selectedShape}
+                onChange={handleShapeChange}
+                label="Select Shape"
+              >
+                {availableShapes.map((shape, index) => (
+                  <MenuItem key={index} value={shape}>
+                    {shape}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-        {/* Dynamically display dimension inputs based on shape */}
-        {shapeDimensions[shape]?.map((dim) => (
-          <TextField
-            key={dim}
-            fullWidth
-            label={dim}
-            type="number"
-            value={dimensions[dim] || 0}
-            onChange={(e) => handleDimensionChange(dim, Number(e.target.value))}
-            margin="normal"
-          />
-        ))}
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="product-select-label">Select Product</InputLabel>
+              <Select
+                labelId="product-select-label"
+                value={selectedProduct?.id || ""}
+                onChange={handleProductChange}
+                label="Select Product"
+              >
+                {availableProducts.map((product) => (
+                  <MenuItem key={product.id} value={product.id}>
+                    {product.name} - ${product.price}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-        {/* Quantity Input */}
-        <TextField
-          fullWidth
-          label="Quantity"
-          type="number"
-          value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-          margin="normal"
-        />
-
-        {/* Unit Price Input */}
-        <TextField
-          fullWidth
-          label="Unit Price"
-          type="number"
-          value={unitPrice}
-          onChange={(e) => setUnitPrice(Number(e.target.value))}
-          margin="normal"
-        />
+            <TextField
+              label="Quantity"
+              type="number"
+              fullWidth
+              value={quantity}
+              onChange={handleQuantityChange}
+              margin="normal"
+            />
+          </>
+        )}
       </DialogContent>
+
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} color="secondary">
           Cancel
         </Button>
-        <Button onClick={handleSave} color="primary">
+        <Button onClick={handleSaveClick} color="primary">
           Save
         </Button>
       </DialogActions>

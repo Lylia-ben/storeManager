@@ -77,7 +77,7 @@ const CustomersTable: React.FC = () => {
                   variant="outlined"
                   color="primary"
                   component={Link}
-                  to={`/customer/${customer.id}`}
+                  to={`/main/customer/${customer.id}`}
                 >
                   View Profile
                 </Button>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link, Outlet} from 'react-router-dom';
 import {
   Drawer,
   List,
@@ -8,6 +9,7 @@ import {
   Typography,
   Toolbar,
   Box,
+  ListItemButton,
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
@@ -18,7 +20,8 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 
 const Sidebar: React.FC = () => {
   return (
-    <Drawer
+    <Box>
+      <Drawer
       variant="permanent"
       sx={{
         width: 240,
@@ -26,7 +29,7 @@ const Sidebar: React.FC = () => {
         [`& .MuiDrawer-paper`]: {
           width: 240,
           boxSizing: 'border-box',
-          backgroundColor: '#1976d2', // Primary blue color
+          backgroundColor: '#1976d2',
           color: '#ffffff',
         },
       }}
@@ -39,88 +42,145 @@ const Sidebar: React.FC = () => {
           sx={{
             textAlign: 'center',
             padding: '16px',
-            backgroundColor: '#1565c0', // Darker blue for header
+            backgroundColor: '#1565c0',
             color: '#ffffff',
           }}
         >
           Welcome to your Dashboard
         </Typography>
         <List>
-          <ListItem
-            sx={{
-              '&:hover': {
-                backgroundColor: '#1565c0', // Highlight on hover
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: '#ffffff' }}>
-              <ShoppingCartIcon />
-            </ListItemIcon>
-            <ListItemText primary="Products" />
+          {/* Link to Products */}
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/main/products"
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#ffffff' }}>
+                <ShoppingCartIcon />
+              </ListItemIcon>
+              <ListItemText primary="Products" />
+            </ListItemButton>
           </ListItem>
-          <ListItem
-            sx={{
-              '&:hover': {
-                backgroundColor: '#1565c0',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: '#ffffff' }}>
-              <AddShoppingCartIcon />
-            </ListItemIcon>
-            <ListItemText primary="Add Product" />
+
+          {/* Link to Add Product */}
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/main/addproduct"
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#ffffff' }}>
+                <AddShoppingCartIcon />
+              </ListItemIcon>
+              <ListItemText primary="Add Product" />
+            </ListItemButton>
           </ListItem>
-          <ListItem
-            sx={{
-              '&:hover': {
-                backgroundColor: '#1565c0',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: '#ffffff' }}>
-              <PeopleIcon />
-            </ListItemIcon>
-            <ListItemText primary="Customers" />
+
+          {/* Link to Customers */}
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/main/customers"
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#ffffff' }}>
+                <PeopleIcon />
+              </ListItemIcon>
+              <ListItemText primary="Customers" />
+            </ListItemButton>
           </ListItem>
-          <ListItem
-            sx={{
-              '&:hover': {
-                backgroundColor: '#1565c0',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: '#ffffff' }}>
-              <PersonAddIcon />
-            </ListItemIcon>
-            <ListItemText primary="Add Customer" />
+
+          {/* Link to Add Customer */}
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/main/addcustomer"
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#ffffff' }}>
+                <PersonAddIcon />
+              </ListItemIcon>
+              <ListItemText primary="Add Customer" />
+            </ListItemButton>
           </ListItem>
-          <ListItem
-            sx={{
-              '&:hover': {
-                backgroundColor: '#1565c0',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: '#ffffff' }}>
-              <AccountBoxIcon />
-            </ListItemIcon>
-            <ListItemText primary="Users" />
+
+          {/* Link to Users */}
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/main/users"
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#ffffff' }}>
+                <AccountBoxIcon />
+              </ListItemIcon>
+              <ListItemText primary="Users" />
+            </ListItemButton>
           </ListItem>
-          <ListItem
-            sx={{
-              '&:hover': {
-                backgroundColor: '#1565c0',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: '#ffffff' }}>
-              <PersonAddAltIcon />
-            </ListItemIcon>
-            <ListItemText primary="Add User" />
+
+          {/* Link to Add User */}
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/main/adduser"
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#ffffff' }}>
+                <PersonAddAltIcon />
+              </ListItemIcon>
+              <ListItemText primary="Add User" />
+            </ListItemButton>
+          </ListItem>
+          {/* Link to CreateOrder */}
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/main/createorder"
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#ffffff' }}>
+                <AddShoppingCartIcon />
+              </ListItemIcon>
+              <ListItemText primary="Create Order" />
+            </ListItemButton>
           </ListItem>
         </List>
       </Box>
-    </Drawer>
+      </Drawer>
+      <Box sx={{ flex: 1, padding: 3 }}>
+      {/* Render nested routes here */}
+        <Outlet />
+      </Box>
+    </Box>
   );
 };
 
