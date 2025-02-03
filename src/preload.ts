@@ -1,14 +1,14 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("electronAPI", {
-  // Existing methods for user management
+  // 📌 User Management
   createUser: (user: { name: string; password: string }) =>
     ipcRenderer.invoke("user:create", user),
 
   authenticateUser: (credentials: { name: string; password: string }) =>
     ipcRenderer.invoke("user:auth", credentials),
 
-  // Existing methods for product management
+  // 📌 Product Management
   createProduct: (productData: {
     shape: "Rectangular" | "Circular" | "Square";
     name: string;
@@ -24,11 +24,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
   deleteProduct: (productId: string) =>
     ipcRenderer.invoke("product:delete", productId),
 
-  fetchProductsByType: (
-    shape: "Rectangular" | "Circular" | "Square"
-  ) => ipcRenderer.invoke("product:fetchByType", shape),
+  fetchAllProducts: () => ipcRenderer.invoke("product:fetchAll"), // ✅ Added
 
-  // New methods for customer management
+  fetchProductById: (productId: string) =>
+    ipcRenderer.invoke("product:fetchById", productId), // ✅ Added
+
+  fetchProductsByType: (shape: "Rectangular" | "Circular" | "Square") =>
+    ipcRenderer.invoke("product:fetchByType", shape),
+
+  updateProduct: (productId: string, updateData: any) =>
+    ipcRenderer.invoke("product:update", { productId, updateData }), // ✅ Added
+
+  // 📌 Customer Management
   createCustomer: (customerData: {
     name: string;
     address: string;
@@ -43,16 +50,22 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   fetchCustomerById: (customerId: string) =>
     ipcRenderer.invoke("customer:fetchById", customerId),
-  // Orders Operations
-  createOrder: (orderData: { products: { productId: string; orderQuantity: number }[] }) =>
-    ipcRenderer.invoke("order:create", orderData),
 
-  // Fetch all orders
+  updateCustomer: (customerId: string, updateData: any) =>
+    ipcRenderer.invoke("customer:update", { customerId, updateData }), // ✅ Added
+
+  // 📌 Orders Management
+  createOrder: (orderData: {
+    customerId: string;
+    products: { productId: string; orderQuantity: number }[];
+  }) => ipcRenderer.invoke("order:create", orderData),
+
   fetchAllOrders: () => ipcRenderer.invoke("order:fetchAll"),
 
-  // Fetch a specific order by ID
   fetchOrderById: (orderId: string) => ipcRenderer.invoke("order:fetchById", orderId),
 
-  // Delete an order by ID
   deleteOrder: (orderId: string) => ipcRenderer.invoke("order:delete", orderId),
+
+  updateOrder: (orderId: string, updateData: any) =>
+    ipcRenderer.invoke("order:update", { orderId, updateData }), // ✅ Added
 });

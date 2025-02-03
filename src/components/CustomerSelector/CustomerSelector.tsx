@@ -1,34 +1,23 @@
-import React, { useState, useEffect } from "react";
-import {
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  CircularProgress,
-} from "@mui/material";
-import { SelectChangeEvent } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { FormControl, InputLabel, MenuItem, Select, CircularProgress, SelectChangeEvent } from "@mui/material";
 
-interface Customer {
-  id: string;
-  name: string;
+interface CustomerSelectorProps {
+  onSelect: (customerId: string) => void;
 }
 
-interface CustomerSelectProps {
-  onSelectCustomer?: (customerId: string) => void;
-}
-
-const CustomerSelector: React.FC<CustomerSelectProps> = ({ onSelectCustomer }) => {
+const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelect }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const customersData = await window.electronAPI.fetchAllCustomers();
-        setCustomers(customersData);
+        const response = await window.electronAPI.fetchAllCustomers();
+        setCustomers(Array.isArray(response) ? response : []);
       } catch (error) {
         console.error("Error fetching customers:", error);
+        setCustomers([]);
       } finally {
         setLoading(false);
       }
@@ -37,36 +26,29 @@ const CustomerSelector: React.FC<CustomerSelectProps> = ({ onSelectCustomer }) =
     fetchCustomers();
   }, []);
 
+  // Fix: Use SelectChangeEvent<string> instead of ChangeEvent
   const handleChange = (event: SelectChangeEvent<string>) => {
-    const customerId = event.target.value as string;
-    setSelectedCustomerId(customerId);
-    console.log(customerId);
-
-    if (onSelectCustomer) {
-      onSelectCustomer(customerId);
-    }
+    const customerId = event.target.value;
+    setSelectedCustomer(customerId);
+    onSelect(customerId);
   };
 
   return (
     <FormControl fullWidth>
-      <InputLabel id="customer-select-label">Select Customer</InputLabel>
+      <InputLabel>Select Customer</InputLabel>
       {loading ? (
-        <CircularProgress size={24} style={{ margin: "16px auto" }} />
+        <CircularProgress size={24} />
       ) : (
-        <Select
-          labelId="customer-select-label"
-          id="customer-select"
-          value={selectedCustomerId}
-          onChange={handleChange}
-        >
-          <MenuItem value="" disabled>
-            -- Choose a Customer --
-          </MenuItem>
-          {customers.map((customer) => (
-            <MenuItem key={customer.id} value={customer.id}>
-              {customer.name}
-            </MenuItem>
-          ))}
+        <Select value={selectedCustomer} onChange={handleChange}>
+          {customers.length > 0 ? (
+            customers.map((customer) => (
+              <MenuItem key={customer._id} value={customer._id}>
+                {customer.name}
+              </MenuItem>
+            ))
+          ) : (
+            <MenuItem disabled>No customers available</MenuItem>
+          )}
         </Select>
       )}
     </FormControl>

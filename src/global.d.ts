@@ -11,7 +11,7 @@ declare global {
         quantity: number;
         cost: number;
         unitPrice: number;
-        shape: string;
+        shape: "Square" | "Circular" | "Rectangular";
         radius?: number;
         width?: number;
         height?: number;
@@ -21,6 +21,8 @@ declare global {
       deleteProduct: (productId: string) => Promise<any>;
 
       fetchProductsByType: (shape: "Square" | "Circular" | "Rectangular") => Promise<Product[]>;
+
+      fetchProductById: (productId: string) => Promise<Product>; // ✅ Added
 
       // New customer handlers
       createCustomer: (customer: {
@@ -37,37 +39,58 @@ declare global {
       fetchCustomerById: (customerId: string) => Promise<Customer>;
 
       // New order handlers
-      createOrder: (orderData: { products: { productId: string; orderQuantity: number }[] }) => Promise<Order>;
+      createOrder: (orderData: { customerId: string; products: { productId: string; quantity: number }[] }) => Promise<Order>;
+
+      deleteOrder: (orderId: string) => Promise<{ message: string; order: Order }>;
 
       fetchAllOrders: () => Promise<Order[]>;
 
       fetchOrderById: (orderId: string) => Promise<Order>;
 
-      deleteOrder: (orderId: string) => Promise<{ message: string; order: Order }>;
+      updateOrder: (orderId: string, updateData: { products?: { productId: string; quantity: number }[] }) => Promise<Order>;
+
+      markOrderPaid: (orderId: string) => Promise<{ message: string }>;
     };
   }
-}
 
-// Add necessary type definitions for Order and Product if not already defined elsewhere.
-interface Order {
-  id: string;
-  totalPrice: number;
-  status: "payed" | "notpayed";
-  products: { productId: string; orderQuantity: number }[];
-}
+  // Product type
+  interface Product {
+    id: string;
+    name: string;
+    quantity: number;
+    cost: number;
+    unitPrice: number;
+    shape: "Square" | "Circular" | "Rectangular";
+    radius?: number;
+    width?: number;
+    height?: number;
+    sideLength?: number;
+  }
 
-interface Product {
-  id: string;
-  name: string;
-  quantity: number;
-  cost: number;
-  unitPrice: number;
-  shape: "Square" | "Circular" | "Rectangular";
-  // Additional product-specific fields
-  radius?: number;
-  width?: number;
-  height?: number;
-  sideLength?: number;
+  // Customer type
+  interface Customer {
+    _id: string; // MongoDB default
+    id?: string; // Optional in case you need it elsewhere
+    name: string;
+    address: string;
+    email: string;
+    phoneNumber: string;
+    orders: string[];
+    totalPrice: number;
+    status: "no debt" | "has debt";
+  }
+  
+
+  // Order type
+  interface Order {
+    id: string;
+    customer: string; // Customer ID
+    products: { productId: string; quantity: number }[]; // Array of products in the order
+    total: number; // Total cost of the order
+    status: "not paid" | "paid"; // Order status
+    createdAt: string; // Timestamp of when the order was created
+    updatedAt: string; // Timestamp of when the order was last updated
+  }
 }
 
 export {};

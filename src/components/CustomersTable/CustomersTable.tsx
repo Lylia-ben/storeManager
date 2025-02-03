@@ -1,100 +1,83 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  Paper,
-} from "@mui/material";
+import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from "@mui/material";
 
-interface Customer {
-  id: string;
-  name: string;
-  address: string;
-  email: string;
-  phoneNumber: string;
-  orders: any[]; // Assuming orders are an array
-  total: number;
-}
 
 const CustomersTable: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
 
-  // Fetch customers on component mount
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
         const fetchedCustomers = await window.electronAPI.fetchAllCustomers();
-        setCustomers(fetchedCustomers);
-        console.log(fetchedCustomers);
+        if (Array.isArray(fetchedCustomers)) {
+          setCustomers(fetchedCustomers); // Set the customers array directly
+        } else {
+          console.error("Fetched data is not an array", fetchedCustomers);
+        }
       } catch (error) {
         console.error("Error fetching customers:", error);
       }
     };
-
+  
     fetchCustomers();
   }, []);
+  
 
-  // Handle customer deletion
-  const handleDelete = async (customerId: string) => {
-    try {
-      await window.electronAPI.deleteCustomer(customerId);
-      setCustomers((prev) => prev.filter((customer) => customer.id !== customerId));
-    } catch (error) {
-      console.error("Error deleting customer:", error);
-    }
+  const handleEdit = (id: string) => {
+    console.log(`Editing customer with ID: ${id}`);
+    // Implement your edit functionality here
+  };
+
+  const handleDelete = (id: string) => {
+    console.log(`Deleting customer with ID: ${id}`);
+    // Implement your delete functionality here
   };
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead sx={{ backgroundColor: "#1565c0" }}>
-          <TableRow>
-            <TableCell sx={{ color: "white" }}>Name</TableCell>
-            <TableCell sx={{ color: "white" }}>Address</TableCell>
-            <TableCell sx={{ color: "white" }}>Email</TableCell>
-            <TableCell sx={{ color: "white" }}>Phone Number</TableCell>
-            <TableCell sx={{ color: "white" }}>Number of Orders</TableCell>
-            <TableCell sx={{ color: "white" }}>Total</TableCell>
-            <TableCell sx={{ color: "white" }}>Operations</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {customers.map((customer) => (
-            <TableRow key={customer.id}>
-              <TableCell>{customer.name}</TableCell>
-              <TableCell>{customer.address}</TableCell>
-              <TableCell>{customer.email}</TableCell>
-              <TableCell>{customer.phoneNumber}</TableCell>
-              <TableCell>{customer.orders.length}</TableCell>
-              <TableCell>{customer.total}</TableCell>
-              <TableCell>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  component={Link}
-                  to={`/main/customer/${customer.id}`}
-                >
-                  View Profile
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleDelete(customer.id)}
-                  style={{ marginLeft: "8px" }}
-                >
-                  Delete
-                </Button>
-              </TableCell>
+    <Paper elevation={3} sx={{ padding: 3 }}>
+      <Typography variant="h6" component="h2" mb={2} textAlign="center">
+        Customers List
+      </Typography>
+      <TableContainer component={Box}>
+        <Table sx={{ minWidth: 650 }} aria-label="customers table">
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Address</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Phone Number</TableCell>
+              <TableCell>Orders</TableCell>
+              <TableCell>Operations</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {customers && customers.length > 0 ? (
+              customers.map((customer) => (
+                <TableRow key={customer.name}>
+                  <TableCell>{customer.name}</TableCell>
+                  <TableCell>{customer.address}</TableCell>
+                  <TableCell>{customer.email}</TableCell>
+                  <TableCell>{customer.phoneNumber}</TableCell>
+                  <TableCell>{customer.orders.length}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleEdit(customer._id)} variant="contained" color="primary" sx={{ mr: 2 }}>
+                      Edit
+                    </Button>
+                    <Button onClick={() => handleDelete(customer._id)} variant="contained" color="secondary">
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center">No customers found</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 };
 

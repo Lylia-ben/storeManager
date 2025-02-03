@@ -12,23 +12,12 @@ import {
   Box,
 } from "@mui/material";
 
-interface Product {
-  id: string;
-  name: string;
-  shape: "CircularProduct";
-  width: number;
-  height:number;
-  quantity: number;
-  cost: number;
-  unitPrice: number;
-}
-
 const RectangularProductTable: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch CircularProduct data
+  // Fetch Rectangular products
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,7 +39,6 @@ const RectangularProductTable: React.FC = () => {
   const handleDelete = async (productId: string) => {
     try {
       await window.electronAPI.deleteProduct(productId);
-      console.log(productId)
       setProducts((prevProducts) =>
         prevProducts.filter((product) => product.id !== productId)
       );

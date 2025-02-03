@@ -50,8 +50,6 @@ export const productIpcHandlers = (): void => {
   ipcMain.handle("product:fetchByType", async (_event, shape) => {
     try {
       let products;
-
-      // Fetch products based on their type
       switch (shape) {
         case "Rectangular":
           products = await RectangularProduct.find();
@@ -65,10 +63,28 @@ export const productIpcHandlers = (): void => {
         default:
           throw new Error(`Invalid product type: ${shape}`);
       }
-
-      return products.map(product => product.toJSON()); // Convert to plain objects for IPC
+  
+      return products.map(product => ({
+        ...product.toJSON(),
+        shape, // Normalize shape to match frontend expectations
+      }));
     } catch (error) {
       console.error(`Error fetching ${shape}s:`, error);
+      throw error;
+    }
+  });
+
+  // Handle fetching a product by ID
+  ipcMain.handle("product:fetchById", async (_event, productId) => {
+    try {
+      const product = await Product.findById(productId);
+      if (!product) {
+        throw new Error(`Product with ID ${productId} not found`);
+      }
+
+      return product.toObject(); // Convert to plain object for IPC response
+    } catch (error) {
+      console.error("Error fetching product by ID:", error);
       throw error;
     }
   });

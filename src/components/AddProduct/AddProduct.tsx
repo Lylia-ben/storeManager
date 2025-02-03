@@ -13,10 +13,11 @@ import {
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
-const shapeOptions = ["Square", "Circular", "Rectangular"];
+const shapeOptions = ["Square", "Circular", "Rectangular"] as const;
+type ShapeOption = typeof shapeOptions[number];
 
 const AddProductForm: React.FC = () => {
-  const [shape, setShape] = useState<string>("");
+  const [shape, setShape] = useState<ShapeOption | "">("");
 
   const formik = useFormik({
     initialValues: {
@@ -71,7 +72,7 @@ const AddProductForm: React.FC = () => {
     onSubmit: async (values) => {
       try {
         const productData = {
-          shape: shape,
+          shape: shape as ShapeOption,
           name: values.name,
           quantity: parseInt(values.quantity, 10),
           cost: parseFloat(values.cost),
@@ -169,7 +170,8 @@ const AddProductForm: React.FC = () => {
             labelId="shape-label"
             value={shape}
             onChange={(e) => {
-              setShape(e.target.value);
+              const newShape = e.target.value as ShapeOption;
+              setShape(newShape);
               formik.setFieldValue("radius", "");
               formik.setFieldValue("width", "");
               formik.setFieldValue("height", "");

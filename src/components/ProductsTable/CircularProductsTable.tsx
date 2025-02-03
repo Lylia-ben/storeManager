@@ -12,16 +12,6 @@ import {
   Box,
 } from "@mui/material";
 
-interface Product {
-  id: string;
-  name: string;
-  shape: "CircularProduct";
-  radius: number;
-  quantity: number;
-  cost: number;
-  unitPrice: number;
-}
-
 const CircularProductTable: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -49,7 +39,6 @@ const CircularProductTable: React.FC = () => {
   const handleDelete = async (productId: string) => {
     try {
       await window.electronAPI.deleteProduct(productId);
-      console.log(productId)
       setProducts((prevProducts) =>
         prevProducts.filter((product) => product.id !== productId)
       );

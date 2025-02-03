@@ -22,7 +22,6 @@ const validationSchema = Yup.object({
     .required("Phone number is required"),
 });
 
-
 const CreateCustomer: React.FC = () => {
   const initialValues = {
     name: "",
@@ -31,17 +30,17 @@ const CreateCustomer: React.FC = () => {
     phoneNumber: "",
   };
 
-  const handleSubmit = async (values: typeof initialValues) => {
-    console.log('from handlesubmit');
-    console.log('Form Values:', values); // Check if values are passed
+  const handleSubmit = async (values: typeof initialValues, { resetForm }: any) => {
+    console.log("Form Values:", values); // Debugging Log
 
     try {
       const response = await window.electronAPI.createCustomer(values);
-      console.log('Response from createCustomer:', response);
-      alert('Customer Created Successfully!');
+      console.log("Response from createCustomer:", response);
+      alert("Customer Created Successfully!");
+      resetForm(); // Clear the form after success
     } catch (error) {
-      console.error('Error creating customer:', error);
-      alert('Failed to create customer. Please try again.');
+      console.error("Error creating customer:", error);
+      alert("Failed to create customer. Please try again.");
     }
   };
 
@@ -50,8 +49,7 @@ const CreateCustomer: React.FC = () => {
       elevation={3}
       sx={{
         maxWidth: 900,
-        marginTop: "50px",
-        marginLeft: "300px",
+        margin: "50px auto",
         padding: 3,
         borderRadius: 2,
       }}
@@ -68,20 +66,19 @@ const CreateCustomer: React.FC = () => {
         Add New Customer
       </Typography>
 
-      {/* Container Split into Two Parts */}
       <Grid container spacing={2}>
         {/* Left Side: Image */}
         <Grid item xs={12} md={6}>
           <Box
             component="img"
             src="../../assets/member-list.png"
-            alt="Image"
+            alt="Customer Illustration"
             sx={{
               width: "100%",
               maxWidth: 400,
               borderRadius: 2,
             }}
-          ></Box>
+          />
         </Grid>
 
         {/* Right Side: Form */}
@@ -91,9 +88,8 @@ const CreateCustomer: React.FC = () => {
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
-            {({ errors, touched, handleChange, values }) => (
+            {({ errors, touched, handleChange, handleBlur, values }) => (
               <Form>
-                {/* Name Field */}
                 <TextField
                   fullWidth
                   margin="normal"
@@ -101,11 +97,11 @@ const CreateCustomer: React.FC = () => {
                   name="name"
                   value={values.name}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   error={touched.name && Boolean(errors.name)}
                   helperText={touched.name && errors.name}
                 />
 
-                {/* Address Field */}
                 <TextField
                   fullWidth
                   margin="normal"
@@ -113,11 +109,11 @@ const CreateCustomer: React.FC = () => {
                   name="address"
                   value={values.address}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   error={touched.address && Boolean(errors.address)}
                   helperText={touched.address && errors.address}
                 />
 
-                {/* Email Field */}
                 <TextField
                   fullWidth
                   margin="normal"
@@ -125,11 +121,11 @@ const CreateCustomer: React.FC = () => {
                   name="email"
                   value={values.email}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   error={touched.email && Boolean(errors.email)}
                   helperText={touched.email && errors.email}
                 />
 
-                {/* Phone Number Field */}
                 <TextField
                   fullWidth
                   margin="normal"
@@ -137,11 +133,11 @@ const CreateCustomer: React.FC = () => {
                   name="phoneNumber"
                   value={values.phoneNumber}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   error={touched.phoneNumber && Boolean(errors.phoneNumber)}
                   helperText={touched.phoneNumber && errors.phoneNumber}
                 />
 
-                {/* Submit Button */}
                 <Button
                   type="submit"
                   variant="contained"
