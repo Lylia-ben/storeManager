@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableRow, TextField, Button } from "@mui/material";
+import { Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
 
 interface OrderTableProps {
   products: (Product & { quantity: number })[];

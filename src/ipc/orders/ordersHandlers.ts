@@ -9,31 +9,47 @@ export const orderIpcHandlers = (): void => {
     const { customerId, products } = orderData;
 
     try {
-      let total = 0;
-
-      // Fetch each product price & calculate total
-      for (const item of products) {
-        const product = await Product.findById(item.productId);
-        if (!product) throw new Error(`Product with ID ${item.productId} not found`);
-        total += product.unitPrice * item.quantity;
+      // 🔍 Check if customer exists
+      const customer = await Customer.findById(customerId);
+      if (!customer) {
+        return { success: false, message: `Customer with ID ${customerId} not found` };
       }
 
-      // Create the new order
+      let total = 0;
+      const validProducts = [];
+
+      // 🔍 Validate products and calculate total
+      for (const item of products) {
+        const product = await Product.findById(item.productId);
+        if (!product) {
+          return { success: false, message: `Product with ID ${item.productId} not found` };
+        }
+
+        const unitPrice = product.unitPrice;
+        const quantity = item.quantity;
+
+        total += unitPrice * quantity;
+
+        validProducts.push({ 
+          productId: item.productId, 
+          quantity, 
+          unitPrice 
+        });
+      }
+
+      // ✅ Create the order
       const newOrder = await Order.create({
         customer: customerId,
-        products,
+        products: validProducts,
         total,
         status: "not paid",
       });
 
-      // Update customer's order list & totalPrice
-      const customer = await Customer.findById(customerId);
-      if (customer) {
-        customer.orders.push(newOrder._id);
-        customer.totalPrice += total;
-        customer.status = "has debt";
-        await customer.save();
-      }
+      // 🔄 Update customer details
+      customer.orders.push(newOrder._id);
+      customer.totalPrice += total;
+      customer.status = "has debt";
+      await customer.save();
 
       return { success: true, data: newOrder.toJSON(), message: "Order created successfully" };
     } catch (error) {
@@ -41,7 +57,6 @@ export const orderIpcHandlers = (): void => {
       return { success: false, message: "Failed to create order", error };
     }
   });
-
   // 📌 Delete Order
   ipcMain.handle("order:delete", async (_event, orderId) => {
     try {

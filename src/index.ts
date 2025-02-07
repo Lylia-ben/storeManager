@@ -3,6 +3,7 @@ import connectDB from './database/database';
 import { userIpcHandlers } from './ipc/users/userhandlers';
 import { productIpcHandlers } from './ipc/product/producthandlers';
 import { customerIpcHandlers } from './ipc/customer/customerHandlers';
+import { orderIpcHandlers } from './ipc/orders/ordersHandlers';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -36,6 +37,7 @@ app.whenReady().then(() => {
   userIpcHandlers();
   productIpcHandlers();
   customerIpcHandlers();
+  orderIpcHandlers();
 
   // Create the main application window
   createWindow();

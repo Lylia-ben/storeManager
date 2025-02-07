@@ -1,11 +1,11 @@
 declare global {
   interface Window {
     electronAPI: {
-      // Existing user handlers
+      // User handlers
       createUser: (user: { name: string; password: string }) => Promise<any>;
       authenticateUser: (credentials: { name: string; password: string }) => Promise<any>;
 
-      // New product handlers
+      // Product handlers
       createProduct: (product: {
         name: string;
         quantity: number;
@@ -22,9 +22,9 @@ declare global {
 
       fetchProductsByType: (shape: "Square" | "Circular" | "Rectangular") => Promise<Product[]>;
 
-      fetchProductById: (productId: string) => Promise<Product>; // ✅ Added
+      fetchProductById: (productId: string) => Promise<Product>; // ✅ Ensure consistent return type
 
-      // New customer handlers
+      // Customer handlers
       createCustomer: (customer: {
         name: string;
         address: string;
@@ -38,8 +38,11 @@ declare global {
 
       fetchCustomerById: (customerId: string) => Promise<Customer>;
 
-      // New order handlers
-      createOrder: (orderData: { customerId: string; products: { productId: string; quantity: number }[] }) => Promise<Order>;
+      // Order handlers
+      createOrder: (orderData: {
+        customerId: string;
+        products: { productId: string; quantity: number }[];
+      }) => Promise<Order>;
 
       deleteOrder: (orderId: string) => Promise<{ message: string; order: Order }>;
 
@@ -55,7 +58,8 @@ declare global {
 
   // Product type
   interface Product {
-    id: string;
+    _id: string; // MongoDB default ID
+    id?: string; // Optional alias for frontend use
     name: string;
     quantity: number;
     cost: number;
@@ -70,20 +74,20 @@ declare global {
   // Customer type
   interface Customer {
     _id: string; // MongoDB default
-    id?: string; // Optional in case you need it elsewhere
+    id?: string; // Optional alias for frontend use
     name: string;
     address: string;
     email: string;
     phoneNumber: string;
-    orders: string[];
+    orders: string[]; // List of order IDs
     totalPrice: number;
     status: "no debt" | "has debt";
   }
-  
 
   // Order type
   interface Order {
-    id: string;
+    _id: string; // MongoDB default
+    id?: string; // Optional alias for frontend use
     customer: string; // Customer ID
     products: { productId: string; quantity: number }[]; // Array of products in the order
     total: number; // Total cost of the order

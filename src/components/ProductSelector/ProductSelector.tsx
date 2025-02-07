@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 
-interface Product {
-  id: string;
-  name: string;
-  radius?: number;
-  width?: number;
-  height?: number;
-  sideLength?: number;
-}
-
 interface ProductSelectorProps {
   shape: "Circular" | "Square" | "Rectangular";
   onSelect: (product: Product) => void;
@@ -23,23 +14,36 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ shape, onSelect }) =>
     const fetchProducts = async () => {
       try {
         const response = await window.electronAPI.fetchProductsByType(shape);
+        if (!response || response.length === 0) {
+          console.warn("No products found for shape:", shape);
+        }
         setProducts(response || []);
       } catch (error) {
         console.error("Error fetching products:", error);
-        setProducts([]);
       }
     };
 
     fetchProducts();
   }, [shape]);
 
-  // Fix: Use SelectChangeEvent<string> instead of ChangeEvent
-  const handleChange = (event: SelectChangeEvent<string>) => {
+  const handleChange = async (event: SelectChangeEvent<string>) => {
     const productId = event.target.value;
     setSelectedProduct(productId);
 
-    // Fetch product details asynchronously but do not make handleChange async
-    window.electronAPI.fetchProductById(productId).then(onSelect).catch(console.error);
+    console.log("Selected Product ID:", productId); // Debugging line
+
+    if (!productId) {
+      console.error("Error: Product ID is undefined.");
+      return;
+    }
+
+    try {
+      const product = await window.electronAPI.fetchProductById(productId);
+      console.log("Fetched Product Details:", product); // Debugging line
+      onSelect(product);
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+    }
   };
 
   return (
