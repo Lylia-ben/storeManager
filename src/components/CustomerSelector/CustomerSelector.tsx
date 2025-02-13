@@ -1,58 +1,62 @@
-import React, { useEffect, useState } from "react";
-import { FormControl, InputLabel, MenuItem, Select, CircularProgress, SelectChangeEvent } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from "@mui/material";
 
-interface CustomerSelectorProps {
-  onSelect: (customerId: string) => void;
+interface CustomerSelectProps {
+  onCustomerSelect: (customerId: string) => void;
 }
 
-const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelect }) => {
+const CustomerSelect: React.FC<CustomerSelectProps> = ({ onCustomerSelect }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(true);
 
+  // Fetch customers on component mount
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const response = await window.electronAPI.fetchAllCustomers();
-        setCustomers(Array.isArray(response) ? response : []);
+        const fetchedCustomers = await window.electronAPI.fetchAllCustomers();
+        setCustomers(fetchedCustomers);
       } catch (error) {
         console.error("Error fetching customers:", error);
-        setCustomers([]);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchCustomers();
   }, []);
 
-  // Fix: Use SelectChangeEvent<string> instead of ChangeEvent
-  const handleChange = (event: SelectChangeEvent<string>) => {
-    const customerId = event.target.value;
-    setSelectedCustomer(customerId);
-    onSelect(customerId);
+  // Handle selection change
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    const selectedId = event.target.value;
+    setSelectedCustomer(selectedId);
+
+    // Find the selected customer
+    const customer = customers.find((cust) => cust.id === selectedId);
+
+    // Print the selected customer ID and name
+    console.log("Selected Customer:", {
+      id: customer?.id,
+      name: customer?.name,
+    });
+
+    // Pass the selected customer ID to the parent component
+    onCustomerSelect(selectedId);
   };
 
   return (
     <FormControl fullWidth>
       <InputLabel>Select Customer</InputLabel>
-      {loading ? (
-        <CircularProgress size={24} />
-      ) : (
-        <Select value={selectedCustomer} onChange={handleChange}>
-          {customers.length > 0 ? (
-            customers.map((customer) => (
-              <MenuItem key={customer._id} value={customer._id}>
-                {customer.name}
-              </MenuItem>
-            ))
-          ) : (
-            <MenuItem disabled>No customers available</MenuItem>
-          )}
-        </Select>
-      )}
+      <Select
+        value={selectedCustomer}
+        label="Select Customer"
+        onChange={handleSelectChange} // Corrected Type
+      >
+        {customers.map((customer) => (
+          <MenuItem key={customer.id} value={customer.id}>
+            {customer.name}
+          </MenuItem>
+        ))}
+      </Select>
     </FormControl>
   );
 };
 
-export default CustomerSelector;
+export default CustomerSelect;

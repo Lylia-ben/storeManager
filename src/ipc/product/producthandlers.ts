@@ -77,15 +77,20 @@ export const productIpcHandlers = (): void => {
   // Handle fetching a product by ID
   ipcMain.handle("product:fetchById", async (_event, productId) => {
     try {
+      if (!productId || typeof productId !== "string") {
+        throw new Error(`Invalid productId: ${productId}`);
+      }
+  
       const product = await Product.findById(productId);
       if (!product) {
         throw new Error(`Product with ID ${productId} not found`);
       }
-
-      return product.toObject(); // Convert to plain object for IPC response
+  
+      return { ...product.toObject(), id: String(product._id) }; // Ensure ID is a string
     } catch (error) {
       console.error("Error fetching product by ID:", error);
       throw error;
     }
   });
+  
 };

@@ -2,12 +2,12 @@ import mongoose, { Schema, Document, ObjectId, Model } from "mongoose";
 
 // 🟢 Customer Interface
 interface ICustomer extends Document {
-  _id: ObjectId;
+  _id: string; // Change to string to ensure correct handling in frontend
   name: string;
   address: string;
   email: string;
   phoneNumber: string;
-  orders: ObjectId[];
+  orders: string[]; // Change to string[] to avoid ObjectId issues in frontend
   status: "has debt" | "no debt";
   totalPrice: number;
 }
@@ -23,7 +23,18 @@ const CustomerSchema = new Schema<ICustomer>(
     status: { type: String, enum: ["has debt", "no debt"], default: "no debt" },
     totalPrice: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        ret.id = ret._id.toString(); // Convert _id to string
+        ret.orders = ret.orders.map((order: ObjectId) => order.toString()); // Convert order IDs to strings
+        delete ret._id; // Remove _id
+        delete ret.__v; // Remove __v (version key)
+        return ret;
+      },
+    },
+  }
 );
 
 // Customer Model

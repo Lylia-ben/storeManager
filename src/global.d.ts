@@ -1,11 +1,11 @@
 declare global {
   interface Window {
     electronAPI: {
-      // User handlers
+      // 🔹 User Handlers
       createUser: (user: { name: string; password: string }) => Promise<any>;
       authenticateUser: (credentials: { name: string; password: string }) => Promise<any>;
 
-      // Product handlers
+      // 🔹 Product Handlers
       createProduct: (product: {
         name: string;
         quantity: number;
@@ -16,50 +16,50 @@ declare global {
         width?: number;
         height?: number;
         sideLength?: number;
-      }) => Promise<any>;
+      }) => Promise<Product>;
 
-      deleteProduct: (productId: string) => Promise<any>;
+      deleteProduct: (productId: string) => Promise<{ success: boolean; message: string }>;
 
       fetchProductsByType: (shape: "Square" | "Circular" | "Rectangular") => Promise<Product[]>;
 
-      fetchProductById: (productId: string) => Promise<Product>; // ✅ Ensure consistent return type
+      fetchProductById: (productId: string) => Promise<Product | null>;
 
-      // Customer handlers
+      // 🔹 Customer Handlers
       createCustomer: (customer: {
         name: string;
         address: string;
         email: string;
         phoneNumber: string;
-      }) => Promise<any>;
+      }) => Promise<Customer>;
 
-      deleteCustomer: (customerId: string) => Promise<any>;
+      deleteCustomer: (customerId: string) => Promise<{ success: boolean; message: string }>;
 
       fetchAllCustomers: () => Promise<Customer[]>;
 
-      fetchCustomerById: (customerId: string) => Promise<Customer>;
+      fetchCustomerById: (customerId: string) => Promise<Customer | null>;
 
-      // Order handlers
+      // 🔹 Order Handlers
       createOrder: (orderData: {
         customerId: string;
         products: { productId: string; quantity: number }[];
-      }) => Promise<Order>;
+      }) => Promise<{ success: boolean; data?: Order; message: string }>;
 
-      deleteOrder: (orderId: string) => Promise<{ message: string; order: Order }>;
+      deleteOrder: (orderId: string) => Promise<{ success: boolean; message: string }>;
 
-      fetchAllOrders: () => Promise<Order[]>;
+      fetchAllOrders: () => Promise<{ success: boolean; data: Order[] }>;
 
-      fetchOrderById: (orderId: string) => Promise<Order>;
+      fetchOrderById: (orderId: string) => Promise<{ success: boolean; data?: Order }>;
 
-      updateOrder: (orderId: string, updateData: { products?: { productId: string; quantity: number }[] }) => Promise<Order>;
+      updateOrder: (orderId: string, updateData: { products?: { productId: string; quantity: number }[] }) => Promise<{ success: boolean; data?: Order; message: string }>;
 
-      markOrderPaid: (orderId: string) => Promise<{ message: string }>;
+      markOrderPaid: (orderId: string) => Promise<{ success: boolean; message: string }>;
     };
   }
 
-  // Product type
+  // 🔹 Product Type
   interface Product {
     _id: string; // MongoDB default ID
-    id?: string; // Optional alias for frontend use
+    id?: string; // Alias for frontend use
     name: string;
     quantity: number;
     cost: number;
@@ -71,10 +71,10 @@ declare global {
     sideLength?: number;
   }
 
-  // Customer type
+  // 🔹 Customer Type
   interface Customer {
-    _id: string; // MongoDB default
-    id?: string; // Optional alias for frontend use
+    _id: string;
+    id?: string;
     name: string;
     address: string;
     email: string;
@@ -84,16 +84,16 @@ declare global {
     status: "no debt" | "has debt";
   }
 
-  // Order type
+  // 🔹 Order Type
   interface Order {
-    _id: string; // MongoDB default
-    id?: string; // Optional alias for frontend use
+    _id: string;
+    id?: string;
     customer: string; // Customer ID
-    products: { productId: string; quantity: number }[]; // Array of products in the order
+    products: { productId: string; quantity: number; unitPrice: number }[]; // Include unit price
     total: number; // Total cost of the order
-    status: "not paid" | "paid"; // Order status
-    createdAt: string; // Timestamp of when the order was created
-    updatedAt: string; // Timestamp of when the order was last updated
+    status: "not paid" | "paid";
+    createdAt: Date | string; // Ensure compatibility with MongoDB
+    updatedAt: Date | string;
   }
 }
 

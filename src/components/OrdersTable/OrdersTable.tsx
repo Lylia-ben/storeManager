@@ -1,43 +1,59 @@
 import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, Paper, TextField } from "@mui/material";
 
 interface OrderTableProps {
-  products: (Product & { quantity: number })[];
-  setProducts: (products: (Product & { quantity: number })[]) => void;
+  products: { id: string; name: string; quantity: number; unitPrice: number; shape: string; width?: number; height?: number; sideLength?: number; radius?: number }[];
+  onQuantityChange: (id: string, quantity: number) => void;
 }
 
-const OrderTable: React.FC<OrderTableProps> = ({ products, setProducts }) => {
-  const handleQuantityChange = (index: number, value: number) => {
-    const updatedProducts = [...products];
-    updatedProducts[index].quantity = value;
-    setProducts(updatedProducts);
-  };
+const OrderTable: React.FC<OrderTableProps> = ({ products, onQuantityChange }) => {
+  // Calculate total sum
+  const totalSum = products.reduce((sum, p) => sum + p.quantity * p.unitPrice, 0);
 
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableCell>Product Name</TableCell>
-          <TableCell>Dimensions</TableCell>
-          <TableCell>Quantity</TableCell>
-          <TableCell>Unit Price</TableCell>
-          <TableCell>Total</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {products.map((product, index) => (
-          <TableRow key={product.id}>
-            <TableCell>{product.name}</TableCell>
-            <TableCell>{product.shape === "Circular" ? `Radius: ${product.radius}` : product.shape === "Rectangular" ? `W: ${product.width}, H: ${product.height}` : `Side: ${product.sideLength}`}</TableCell>
-            <TableCell>
-              <TextField type="number" value={product.quantity} onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))} />
-            </TableCell>
-            <TableCell>{product.unitPrice}</TableCell>
-            <TableCell>{product.unitPrice * product.quantity}</TableCell>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Product Name</TableCell>
+            <TableCell>Dimension</TableCell>
+            <TableCell>Quantity</TableCell>
+            <TableCell>Unit Price</TableCell>
+            <TableCell>Total</TableCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHead>
+        <TableBody>
+          {products.map((product) => (
+            <TableRow key={product.id}>
+              <TableCell>{product.name}</TableCell>
+              <TableCell>
+                {product.shape === "Rectangular"
+                  ? `W: ${product.width}, H: ${product.height}`
+                  : product.shape === "Square"
+                  ? `Side: ${product.sideLength}`
+                  : `Radius: ${product.radius}`}
+              </TableCell>
+              <TableCell>
+                <TextField
+                  type="number"
+                  value={product.quantity}
+                  onChange={(e) => onQuantityChange(product.id, Number(e.target.value))}
+                  inputProps={{ min: 1 }}
+                />
+              </TableCell>
+              <TableCell>{product.unitPrice.toFixed(2)}</TableCell>
+              <TableCell>{(product.quantity * product.unitPrice).toFixed(2)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={4}>Total Sum:</TableCell>
+            <TableCell>{totalSum.toFixed(2)}</TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </TableContainer>
   );
 };
 

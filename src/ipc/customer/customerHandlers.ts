@@ -17,7 +17,11 @@ export const customerIpcHandlers = (): void => {
         status: "no debt",
       });
 
-      return { success: true, data: newCustomer.toJSON(), message: "Customer created successfully" };
+      return {
+        success: true,
+        data: newCustomer.toJSON(),
+        message: "Customer created successfully",
+      };
     } catch (error) {
       console.error("Error creating customer:", error);
       return { success: false, message: "Failed to create customer", error };
@@ -32,7 +36,11 @@ export const customerIpcHandlers = (): void => {
         return { success: false, message: `Customer with ID ${customerId} not found` };
       }
 
-      return { success: true, data: deletedCustomer.toJSON(), message: "Customer deleted successfully" };
+      return {
+        success: true,
+        data: deletedCustomer.toJSON(),
+        message: "Customer deleted successfully",
+      };
     } catch (error) {
       console.error("Error deleting customer:", error);
       return { success: false, message: "Failed to delete customer", error };
@@ -42,20 +50,13 @@ export const customerIpcHandlers = (): void => {
   // 📌 Fetch all customers
   ipcMain.handle("customer:fetchAll", async () => {
     try {
-      // Fetch all customers
       const customers = await Customer.find();
-  
-      // Normalize customers to match frontend expectations
-      return customers.map(customer => ({
-        ...customer.toJSON(),
-        ordersCount: customer.orders.length, // Add orders count field to each customer object
-      }));
+      return customers.map((c) => c.toJSON()); // 👈 Directly returning an array of customers
     } catch (error) {
       console.error("Error fetching customers:", error);
-      throw error; // Rethrow error if necessary for frontend to handle
+      return []; // 👈 Return empty array if error occurs
     }
   });
-  
 
   // 📌 Fetch a single customer by ID
   ipcMain.handle("customer:fetchById", async (_event, customerId) => {
@@ -65,7 +66,13 @@ export const customerIpcHandlers = (): void => {
         return { success: false, message: `Customer with ID ${customerId} not found` };
       }
 
-      return { success: true, data: customer.toJSON() };
+      return {
+        success: true,
+        data: {
+          ...customer.toJSON(),
+          id: customer._id.toString(),
+        },
+      };
     } catch (error) {
       console.error("Error fetching customer:", error);
       return { success: false, message: "Failed to fetch customer", error };
@@ -84,7 +91,14 @@ export const customerIpcHandlers = (): void => {
         return { success: false, message: `Customer with ID ${customerId} not found` };
       }
 
-      return { success: true, data: updatedCustomer.toJSON(), message: "Customer updated successfully" };
+      return {
+        success: true,
+        data: {
+          ...updatedCustomer.toJSON(),
+          id: updatedCustomer._id.toString(),
+        },
+        message: "Customer updated successfully",
+      };
     } catch (error) {
       console.error("Error updating customer:", error);
       return { success: false, message: "Failed to update customer", error };

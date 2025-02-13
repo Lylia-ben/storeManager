@@ -29,22 +29,27 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ shape, onSelect }) =>
   const handleChange = async (event: SelectChangeEvent<string>) => {
     const productId = event.target.value;
     setSelectedProduct(productId);
-
-    console.log("Selected Product ID:", productId); // Debugging line
-
-    if (!productId) {
-      console.error("Error: Product ID is undefined.");
+  
+    if (!productId || productId === "undefined") {
+      console.error("Error: Selected Product ID is invalid!", productId);
       return;
     }
-
+  
     try {
       const product = await window.electronAPI.fetchProductById(productId);
-      console.log("Fetched Product Details:", product); // Debugging line
-      onSelect(product);
+  
+      if (!product || !product.id) {
+        console.error("Error: Fetched product has no valid ID!", product);
+        return;
+      }
+  
+      console.log("Fetched Product Details:", product); // Debugging
+      onSelect({ ...product, id: String(product.id) }); // Ensure ID is a string
     } catch (error) {
       console.error("Error fetching product details:", error);
     }
   };
+  
 
   return (
     <FormControl fullWidth>
