@@ -1,3 +1,4 @@
+
 import mongoose, { Schema, Document, Model, ObjectId } from 'mongoose';
 
 // Transform helper function
@@ -15,6 +16,11 @@ interface IProduct extends Document {
   quantity: number;
   cost: number;
   unitPrice: number;
+  shape: "RectangularProduct" | "SquareProduct" | "CircularProduct"; 
+  width?: number;
+  height?: number;
+  sideLength?: number;
+  radius?: number;
 }
 
 // Extended interfaces

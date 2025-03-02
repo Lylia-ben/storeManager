@@ -47,7 +47,7 @@ const CustomerSelect: React.FC<CustomerSelectProps> = ({ onCustomerSelect }) => 
       <Select
         value={selectedCustomer}
         label="Select Customer"
-        onChange={handleSelectChange} // Corrected Type
+        onChange={handleSelectChange} 
       >
         {customers.map((customer) => (
           <MenuItem key={customer.id} value={customer.id}>

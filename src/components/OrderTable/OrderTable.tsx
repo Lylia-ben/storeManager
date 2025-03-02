@@ -10,6 +10,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ products, onQuantityChange }) =
   // Calculate total sum
   const totalSum = products.reduce((sum, p) => sum + p.quantity * p.unitPrice, 0);
 
+
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -23,28 +24,35 @@ const OrderTable: React.FC<OrderTableProps> = ({ products, onQuantityChange }) =
           </TableRow>
         </TableHead>
         <TableBody>
-          {products.map((product) => (
-            <TableRow key={product.id}>
-              <TableCell>{product.name}</TableCell>
-              <TableCell>
-                {product.shape === "Rectangular"
-                  ? `W: ${product.width}, H: ${product.height}`
-                  : product.shape === "Square"
-                  ? `Side: ${product.sideLength}`
-                  : `Radius: ${product.radius}`}
-              </TableCell>
-              <TableCell>
-                <TextField
-                  type="number"
-                  value={product.quantity}
-                  onChange={(e) => onQuantityChange(product.id, Number(e.target.value))}
-                  inputProps={{ min: 1 }}
-                />
-              </TableCell>
-              <TableCell>{product.unitPrice.toFixed(2)}</TableCell>
-              <TableCell>{(product.quantity * product.unitPrice).toFixed(2)}</TableCell>
-            </TableRow>
-          ))}
+        {products.map((product) => {
+  console.log("Product in table:", product); // Debugging
+
+  return (
+    <TableRow key={product.id}>
+      <TableCell>{product.name}</TableCell>
+      <TableCell>
+        {product.shape === "RectangularProduct" && product.width && product.height
+          ? `W: ${product.width}, H: ${product.height}`
+          : product.shape === "SquareProduct" && product.sideLength
+          ? `Side: ${product.sideLength}`
+          : product.shape === "CircularProduct" && product.radius
+          ? `Radius: ${product.radius}`
+          : "N/A"}
+      </TableCell>
+      <TableCell>
+        <TextField
+          type="number"
+          value={product.quantity}
+          onChange={(e) => onQuantityChange(product.id, Number(e.target.value))}
+          inputProps={{ min: 1 }}
+        />
+      </TableCell>
+      <TableCell>{product.unitPrice.toFixed(2)}</TableCell>
+      <TableCell>{(product.quantity * product.unitPrice).toFixed(2)}</TableCell>
+    </TableRow>
+  );
+})}
+
         </TableBody>
         <TableFooter>
           <TableRow>

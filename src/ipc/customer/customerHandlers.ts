@@ -12,7 +12,6 @@ export const customerIpcHandlers = (): void => {
         address,
         email,
         phoneNumber,
-        orders: [],
         totalPrice: 0, // Corrected field name
         status: "no debt",
       });
@@ -63,45 +62,63 @@ export const customerIpcHandlers = (): void => {
     try {
       const customer = await Customer.findById(customerId);
       if (!customer) {
-        return { success: false, message: `Customer with ID ${customerId} not found` };
+        return null; // Return null if customer is not found
       }
-
+  
       return {
-        success: true,
-        data: {
-          ...customer.toJSON(),
-          id: customer._id.toString(),
-        },
+        ...customer.toJSON(),
+        id: customer._id.toString(), // Ensure `id` is a string
       };
     } catch (error) {
       console.error("Error fetching customer:", error);
-      return { success: false, message: "Failed to fetch customer", error };
+      return null; // Return null on error instead of an error object
     }
   });
+  
 
   // 📌 Update a customer's details
   ipcMain.handle("customer:update", async (_event, { customerId, updateData }) => {
     try {
       const updatedCustomer = await Customer.findByIdAndUpdate(customerId, updateData, {
-        new: true, // Return updated document
-        runValidators: true, // Ensure validations apply
+        new: true,
+        runValidators: true,
       });
-
+  
       if (!updatedCustomer) {
         return { success: false, message: `Customer with ID ${customerId} not found` };
       }
-
+  
       return {
         success: true,
-        data: {
-          ...updatedCustomer.toJSON(),
-          id: updatedCustomer._id.toString(),
-        },
+        data: { ...updatedCustomer.toJSON(), id: updatedCustomer._id.toString() },
         message: "Customer updated successfully",
       };
     } catch (error) {
       console.error("Error updating customer:", error);
       return { success: false, message: "Failed to update customer", error };
+    }
+  });
+  
+  // 📌 Toggle Status has debt / no debt 
+  ipcMain.handle("customer:toggleDebt", async (_event, customerId) => {
+    console.log(`🔹 Received customer:toggleDebt for customerId: ${customerId}`);
+
+    try {
+      const customer = await Customer.findById(customerId);
+      if (!customer) return { success: false, message: "Customer not found" };
+
+      // Toggle status
+      customer.status = customer.status === "has debt" ? "no debt" : "has debt";
+      await customer.save();
+
+      return {
+        success: true,
+        message: `Customer marked as ${customer.status}`,
+        status: customer.status,
+      };
+    } catch (error) {
+      console.error("❌ Error toggling customer debt status:", error);
+      return { success: false, message: "Failed to toggle debt status", error };
     }
   });
 };

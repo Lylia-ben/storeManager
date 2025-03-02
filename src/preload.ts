@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("electronAPI", {
   // 📌 User Management
-  createUser: (user: { name: string; password: string }) =>
+  createUser: (user: { name: string; password: string; role: string }) =>
     ipcRenderer.invoke("user:create", user),
 
   authenticateUser: (credentials: { name: string; password: string }) =>
@@ -15,31 +15,31 @@ contextBridge.exposeInMainWorld("electronAPI", {
     quantity: number;
     cost: number;
     unitPrice: number;
-    width?: number; // For RectangularProduct
-    height?: number; // For RectangularProduct
-    radius?: number; // For CircularProduct
-    sideLength?: number; // For SquareProduct
+    width?: number;
+    height?: number;
+    radius?: number;
+    sideLength?: number;
   }) => ipcRenderer.invoke("product:create", productData),
 
   deleteProduct: (productId: string) =>
     ipcRenderer.invoke("product:delete", productId),
 
-  fetchAllProducts: () => ipcRenderer.invoke("product:fetchAll"), // ✅ Added
+  fetchAllProducts: () => ipcRenderer.invoke("product:fetchAll"),
 
   fetchProductById: (productId: string) =>
-    ipcRenderer.invoke("product:fetchById", productId), // ✅ Added
+    ipcRenderer.invoke("product:fetchById", productId),
 
   fetchProductsByType: (shape: "Rectangular" | "Circular" | "Square") =>
     ipcRenderer.invoke("product:fetchByType", shape),
 
-  updateProduct: (productId: string, updateData: any) =>
-    ipcRenderer.invoke("product:update", { productId, updateData }), // ✅ Added
+  updateProduct: (productId: string, updateData: Partial<Record<string, any>>) =>
+    ipcRenderer.invoke("product:update", { productId, updateData }),
 
   // 📌 Customer Management
   createCustomer: (customerData: {
     name: string;
-    address: string;
-    email: string;
+    address?: string;
+    email?: string;
     phoneNumber: string;
   }) => ipcRenderer.invoke("customer:create", customerData),
 
@@ -51,21 +51,32 @@ contextBridge.exposeInMainWorld("electronAPI", {
   fetchCustomerById: (customerId: string) =>
     ipcRenderer.invoke("customer:fetchById", customerId),
 
-  updateCustomer: (customerId: string, updateData: any) =>
-    ipcRenderer.invoke("customer:update", { customerId, updateData }), // ✅ Added
+  updateCustomer: (customerId: string, updateData: Partial<Record<string, any>>) =>
+    ipcRenderer.invoke("customer:update", { customerId, updateData }),
 
-  // 📌 Orders Management
+  toggleCustomerDebt: (customerId: string) =>
+    ipcRenderer.invoke("customer:toggleDebt", customerId),
+
+  // 📌 Order Management
   createOrder: (orderData: {
     customerId: string;
-    products: { productId: string; orderQuantity: number }[];
+    products: { productId: string; quantity: number }[];
   }) => ipcRenderer.invoke("order:create", orderData),
 
   fetchAllOrders: () => ipcRenderer.invoke("order:fetchAll"),
 
-  fetchOrderById: (orderId: string) => ipcRenderer.invoke("order:fetchById", orderId),
+  fetchOrderById: (orderId: string) =>
+    ipcRenderer.invoke("order:fetchById", orderId),
 
-  deleteOrder: (orderId: string) => ipcRenderer.invoke("order:delete", orderId),
+  deleteOrder: (orderId: string) =>
+    ipcRenderer.invoke("order:delete", orderId),
 
-  updateOrder: (orderId: string, updateData: any) =>
-    ipcRenderer.invoke("order:update", { orderId, updateData }), // ✅ Added
+  updateOrder: (orderId: string, updateData: Partial<Record<string, any>>) =>
+    ipcRenderer.invoke("order:update", { orderId, updateData }),
+
+  fetchOrdersByCustomerId: (customerId: string) =>
+    ipcRenderer.invoke("order:fetchByCustomerId", customerId),
+
+  toggleOrderPaid: (orderId: string) =>
+    ipcRenderer.invoke("order:togglePaid", orderId),
 });

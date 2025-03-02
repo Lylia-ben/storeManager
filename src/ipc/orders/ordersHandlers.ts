@@ -7,78 +7,75 @@ export const orderIpcHandlers = (): void => {
   // 📌 Create Order
   ipcMain.handle(
     "order:create",
-    async (_event, orderData: { customerId: string; products: { productId: string; quantity: number }[] }) => {
-      const { customerId, products } = orderData;
-  
+    async (_event, orderData: { customerId: string; orderItems: { productId: string; quantity: number }[] }) => {
+      const { customerId, orderItems } = orderData;
+
       try {
         console.log("🔹 Received order data:", orderData);
-  
+
         // Validate customer ID
-        if (typeof customerId !== "string") {
-          throw new Error("Invalid customerId: Must be a string");
-        }
-  
-        // Find the customer
+        if (!customerId) throw new Error("Customer ID is required");
+
+        // Find customer
         const customer = await Customer.findById(customerId);
-        if (!customer) {
-          console.error(`❌ Customer with ID ${customerId} not found`);
-          return { success: false, message: `Customer with ID ${customerId} not found` };
-        }
-  
-        let total = 0;
-        const validProducts = [];
-  
-        for (const item of products) {
-          if (typeof item.productId !== "string") {
-            throw new Error("Invalid productId: Must be a string");
-          }
-  
-          // Find the product
+        if (!customer) return { success: false, message: "Customer not found" };
+
+        let totalPrice = 0;
+        const processedItems = [];
+
+        for (const item of orderItems) {
+          // Find product
           const product = await Product.findById(item.productId);
-          if (!product) {
-            console.error(`❌ Product with ID ${item.productId} not found`);
-            return { success: false, message: `Product with ID ${item.productId} not found` };
-          }
-  
-          // Check if enough stock is available
+          if (!product) return { success: false, message: `Product ${item.productId} not found` };
+
+          // Check stock
           if (product.quantity < item.quantity) {
-            console.error(`❌ Not enough stock for product ${product.name}`);
-            return { success: false, message: `Not enough stock for ${product.name}` };
+            return { success: false, message: `Insufficient stock for ${product.name}` };
           }
-  
+
           // Reduce stock
           product.quantity -= item.quantity;
           await product.save();
-  
-          // Calculate total price
-          total += product.unitPrice * item.quantity;
-  
-          validProducts.push({
-            productId: product._id,
+
+          // Compute total price
+          const itemTotal = product.unitPrice * item.quantity;
+          totalPrice += itemTotal;
+
+          processedItems.push({
+            product: product._id,
+            productName: product.name,
+            shape: product.shape,
+            dimensions:
+              "width" in product && "height" in product
+                ? `Width: ${product.width}cm, Height: ${product.height}cm`
+                : "sideLength" in product
+                ? `Side: ${product.sideLength}cm`
+                : "radius" in product
+                ? `Radius: ${product.radius}cm`
+                : "Unknown dimensions",
             quantity: item.quantity,
-            unitPrice: product.unitPrice, // Ensuring correct pricing
+            unitPrice: product.unitPrice,
+            total: itemTotal,
           });
+          
         }
-  
-        // Create the order
+
+        // Create order
         const newOrder = new Order({
           customer: customerId,
-          products: validProducts,
-          total,
+          orderItems: processedItems,
+          totalPrice,
           status: "not paid",
         });
-  
+
         const savedOrder = await newOrder.save();
-        console.log(`✅ Order successfully saved with ID: ${savedOrder._id}`);
-  
-        // Update customer orders & debt status
-        customer.orders.push(savedOrder.id);
-        customer.totalPrice += total;
+        console.log(`✅ Order saved with ID: ${savedOrder._id}`);
+
+        // Update customer
+        customer.totalPrice += totalPrice;
         customer.status = "has debt";
-  
         await customer.save();
-        console.log(`✅ Customer updated: ${customerId}, Order added: ${savedOrder._id}`);
-  
+
         return { success: true, data: savedOrder.toJSON(), message: "Order created successfully" };
       } catch (error) {
         console.error("❌ Error creating order:", error);
@@ -86,9 +83,37 @@ export const orderIpcHandlers = (): void => {
       }
     }
   );
-  
-  
-  
+
+  // 📌 Fetch All Orders
+  ipcMain.handle("order:fetchAll", async () => {
+    try {
+      const orders = await Order.find().populate("customer").populate("orderItems.product");
+
+      return {
+        success: true,
+        data: orders.map((o) => ({
+          ...o.toJSON(),
+          id: o._id.toString(),
+        })),
+      };
+    } catch (error) {
+      console.error("❌ Error fetching orders:", error);
+      return { success: false, message: "Failed to fetch orders", error };
+    }
+  });
+
+  // 📌 Fetch Order by ID
+  ipcMain.handle("order:fetchById", async (_event, orderId) => {
+    try {
+      const order = await Order.findById(orderId).populate("customer").populate("orderItems.product");
+      if (!order) return { success: false, message: "Order not found" };
+
+      return { success: true, data: { ...order.toJSON(), id: order._id.toString() } };
+    } catch (error) {
+      console.error("❌ Error fetching order:", error);
+      return { success: false, message: "Failed to fetch order", error };
+    }
+  });
 
   // 📌 Delete Order
   ipcMain.handle("order:delete", async (_event, orderId) => {
@@ -98,8 +123,7 @@ export const orderIpcHandlers = (): void => {
 
       const customer = await Customer.findById(order.customer);
       if (customer) {
-        customer.orders = customer.orders.filter((id) => id.toString() !== orderId);
-        customer.totalPrice -= order.total;
+        customer.totalPrice -= order.totalPrice;
         customer.status = customer.totalPrice > 0 ? "has debt" : "no debt";
         await customer.save();
       }
@@ -108,101 +132,67 @@ export const orderIpcHandlers = (): void => {
 
       return { success: true, message: "Order deleted successfully" };
     } catch (error) {
-      console.error("Error deleting order:", error);
+      console.error("❌ Error deleting order:", error);
       return { success: false, message: "Failed to delete order", error };
     }
   });
 
-  // 📌 Fetch All Orders
-  ipcMain.handle("order:fetchAll", async () => {
-    try {
-      const orders = await Order.find().populate("customer").populate("products.productId");
-
-      return {
-        success: true,
-        data: orders.map((o) => ({
-          ...o.toJSON(),
-          id: o._id.toString(), // Convert _id to string
-        })),
-      };
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      return { success: false, message: "Failed to fetch orders", error };
-    }
-  });
-
-  // 📌 Fetch Order by ID
-  ipcMain.handle("order:fetchById", async (_event, orderId) => {
-    try {
-      const order = await Order.findById(orderId).populate("customer").populate("products.productId");
-      if (!order) return { success: false, message: "Order not found" };
-
-      return { success: true, data: { ...order.toJSON(), id: order._id.toString() } };
-    } catch (error) {
-      console.error("Error fetching order:", error);
-      return { success: false, message: "Failed to fetch order", error };
-    }
-  });
-
-  // 📌 Update Order (Modify products & recalculate total)
+  // 📌 Update Order
   ipcMain.handle("order:update", async (_event, { orderId, updateData }) => {
     try {
-      let newTotal = 0;
+      const existingOrder = await Order.findById(orderId);
+      if (!existingOrder) return { success: false, message: "Order not found" };
 
-      if (updateData.products) {
-        for (const item of updateData.products) {
-          const product = await Product.findById(item.productId);
-          if (!product) throw new Error(`Product with ID ${item.productId} not found`);
-          newTotal += product.unitPrice * item.quantity;
+      let newTotalPrice = 0;
+      if (updateData.orderItems) {
+        for (const item of updateData.orderItems) {
+          const product = await Product.findById(item.product);
+          if (!product) throw new Error(`Product with ID ${item.product} not found`);
+          newTotalPrice += product.unitPrice * item.quantity;
         }
       }
 
       const updatedOrder = await Order.findByIdAndUpdate(
         orderId,
-        { ...updateData, total: newTotal },
+        { ...updateData, totalPrice: newTotalPrice },
         { new: true, runValidators: true }
-      );
+      ).populate("customer").populate("orderItems.product");
 
       if (!updatedOrder) return { success: false, message: "Order not found" };
 
-      // Update customer's totalPrice
+      // Update customer total debt
       const customer = await Customer.findById(updatedOrder.customer);
       if (customer) {
-        const unpaidOrders = await Order.find({ customer: customer._id, status: "not paid" });
-        customer.totalPrice = unpaidOrders.reduce((sum, order) => sum + order.total, 0);
+        const unpaidOrders = await Order.find({ customer: customer._id, status: "pending" });
+        customer.totalPrice = unpaidOrders.reduce((sum, order) => sum + order.totalPrice, 0);
         customer.status = customer.totalPrice > 0 ? "has debt" : "no debt";
         await customer.save();
       }
 
       return { success: true, data: { ...updatedOrder.toJSON(), id: updatedOrder._id.toString() }, message: "Order updated successfully" };
     } catch (error) {
-      console.error("Error updating order:", error);
+      console.error("❌ Error updating order:", error);
       return { success: false, message: "Failed to update order", error };
     }
   });
 
-  // 📌 Mark Order as Paid
-  ipcMain.handle("order:markPaid", async (_event, orderId) => {
+  // 📌 Fetch Orders by Customer ID
+  ipcMain.handle("order:fetchByCustomerId", async (_event, customerId) => {
     try {
-      const order = await Order.findById(orderId);
-      if (!order) return { success: false, message: "Order not found" };
+      if (!customerId) throw new Error("Customer ID is required");
 
-      order.status = "paid";
-      await order.save();
+      const orders = await Order.find({ customer: customerId }).populate("orderItems.product");
 
-      // Update customer's debt status
-      const customer = await Customer.findById(order.customer);
-      if (customer) {
-        const unpaidOrders = await Order.find({ customer: customer._id, status: "not paid" });
-        customer.totalPrice = unpaidOrders.reduce((sum, order) => sum + order.total, 0);
-        customer.status = customer.totalPrice > 0 ? "has debt" : "no debt";
-        await customer.save();
-      }
-
-      return { success: true, message: "Order marked as paid" };
+      return {
+        success: true,
+        data: orders.map((order) => ({
+          ...order.toJSON(),
+          id: order._id.toString(),
+        })),
+      };
     } catch (error) {
-      console.error("Error marking order as paid:", error);
-      return { success: false, message: "Failed to mark order as paid", error };
+      console.error("❌ Error fetching orders for customer:", error);
+      return { success: false, message: "Failed to fetch orders for customer", error };
     }
   });
 };

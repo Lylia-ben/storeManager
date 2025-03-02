@@ -1,16 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from "@mui/material";
-
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+} from "@mui/material";
 
 const CustomersTable: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
         const fetchedCustomers = await window.electronAPI.fetchAllCustomers();
         if (Array.isArray(fetchedCustomers)) {
-          setCustomers(fetchedCustomers); // Set the customers array directly
+          setCustomers(fetchedCustomers);
+          console.log(fetchedCustomers)
         } else {
           console.error("Fetched data is not an array", fetchedCustomers);
         }
@@ -18,19 +31,19 @@ const CustomersTable: React.FC = () => {
         console.error("Error fetching customers:", error);
       }
     };
-  
+
     fetchCustomers();
   }, []);
-  
 
-  const handleEdit = (id: string) => {
-    console.log(`Editing customer with ID: ${id}`);
-    // Implement your edit functionality here
+  const handleViewProfile = (id: string) => {
+    console.log("Navigating to profile with ID:", id); // Debugging
+    navigate(`/main/customer-profil/${id}`);
   };
+  
 
   const handleDelete = (id: string) => {
     console.log(`Deleting customer with ID: ${id}`);
-    // Implement your delete functionality here
+    // Implement delete functionality here
   };
 
   return (
@@ -46,24 +59,39 @@ const CustomersTable: React.FC = () => {
               <TableCell>Address</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Phone Number</TableCell>
-              <TableCell>Orders</TableCell>
               <TableCell>Operations</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {customers && customers.length > 0 ? (
+            {customers.length > 0 ? (
               customers.map((customer) => (
-                <TableRow key={customer.name}>
+                <TableRow key={customer.id}>
                   <TableCell>{customer.name}</TableCell>
                   <TableCell>{customer.address}</TableCell>
                   <TableCell>{customer.email}</TableCell>
                   <TableCell>{customer.phoneNumber}</TableCell>
-                  <TableCell>{customer.orders.length}</TableCell>
                   <TableCell>
-                    <Button onClick={() => handleEdit(customer._id)} variant="contained" color="primary" sx={{ mr: 2 }}>
-                      Edit
+                    <Button
+                      onClick={() => handleViewProfile(customer.id)}
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "#3386ff",
+                        color: "#fff",
+                        mr: 2,
+                        "&:hover": { backgroundColor: "#2a72d0" },
+                      }}
+                    >
+                      View Profile
                     </Button>
-                    <Button onClick={() => handleDelete(customer._id)} variant="contained" color="secondary">
+                    <Button
+                      onClick={() => handleDelete(customer.id)}
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "#d32f2f",
+                        color: "#fff",
+                        "&:hover": { backgroundColor: "#b71c1c" },
+                      }}
+                    >
                       Delete
                     </Button>
                   </TableCell>
@@ -71,7 +99,9 @@ const CustomersTable: React.FC = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} align="center">No customers found</TableCell>
+                <TableCell colSpan={6} align="center">
+                  No customers found
+                </TableCell>
               </TableRow>
             )}
           </TableBody>

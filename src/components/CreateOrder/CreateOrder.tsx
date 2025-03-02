@@ -3,7 +3,7 @@ import { Button, Grid } from "@mui/material";
 import CustomerSelector from "../CustomerSelector/CustomerSelector";
 import ProductShapeSelector from "../ShapeSelector/ShapeSelector";
 import ProductSelector from "../ProductSelector/ProductSelector";
-import OrderTable from "../OrdersTable/OrdersTable";
+import OrderTable from "../OrderTable/OrderTable";
 
 const CreateOrder: React.FC = () => {
   const [customerId, setCustomerId] = useState<string>("");
@@ -29,9 +29,21 @@ const CreateOrder: React.FC = () => {
       const existingProduct = prev.find((p) => p.id === product.id);
       if (existingProduct) return prev; // Prevent duplicates
   
-      return [...prev, { ...product, id: String(product.id), quantity: 1 }];
+      return [
+        ...prev,
+        {
+          ...product,
+          id: String(product.id),
+          quantity: 1,
+          width: product.width ?? undefined, // Ensure dimensions are explicitly set
+          height: product.height ?? undefined,
+          sideLength: product.sideLength ?? undefined,
+          radius: product.radius ?? undefined,
+        },
+      ];
     });
   };
+  
   
   
 
@@ -47,9 +59,9 @@ const CreateOrder: React.FC = () => {
       return;
     }
   
-    const orderData = {
+    const orderData: OrderInput = {
       customerId,
-      products: selectedProducts.map((p) => ({
+      orderItems: selectedProducts.map((p) => ({
         productId: String(p.id), // ✅ Ensure it's a string
         quantity: p.quantity,
       })),

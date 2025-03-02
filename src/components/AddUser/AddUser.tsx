@@ -1,28 +1,35 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import { TextField, Button, Box, Typography } from "@mui/material";
+import { TextField, Button, Box, Typography,MenuItem } from "@mui/material";
 
 interface FormData {
   name: string; // Updated to match the Electron API
   password: string;
+  role: string;
 }
 
 interface FormErrors {
   name?: string; // Updated to match the Electron API
   password?: string;
+  role?: string;
 }
 
 
 const AddUserForm: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({ name: "", password: "" }); // Updated field name
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    password: "",
+    role: "user", // ✅ Default role (can be changed as needed)
+  });
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
+  
     // Clear errors on change
     setErrors((prevErrors) => ({ ...prevErrors, [name]: undefined }));
   };
+  
 
   const handleSubmit = (e: FormEvent): void => {
     e.preventDefault();
@@ -42,7 +49,7 @@ const AddUserForm: React.FC = () => {
       try {
         window.electronAPI.createUser(formData);
         alert("User added successfully!");
-        setFormData({ name: "", password: "" }); // Clear form after submission
+        setFormData({ name: "", password: "" ,role:"user" }); // Clear form after submission
       } catch (error) {
         console.error("Error creating user:", error);
         alert("Failed to create user. Please try again.");
@@ -105,6 +112,24 @@ const AddUserForm: React.FC = () => {
           },
         }}
       />
+      <TextField
+        select
+        fullWidth
+        label="Role"
+        name="role"
+        value={formData.role}
+        onChange={handleChange}
+        variant="outlined"
+        margin="normal"
+        sx={{
+          "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#3386ff",
+          },
+        }}
+      >
+        <MenuItem value="user">User</MenuItem>
+        <MenuItem value="admin">Admin</MenuItem>
+      </TextField>
       <Button
         type="submit"
         variant="contained"
