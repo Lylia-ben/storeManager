@@ -92,5 +92,34 @@ export const productIpcHandlers = (): void => {
       throw error;
     }
   });
-  
+  // 🔹 Handle product update by ID
+  ipcMain.handle("product:update", async (_event, productId, updateData) => {
+    try {
+      const { shape, ...updates } = updateData;
+      let updatedProduct;
+
+      switch (shape) {
+        case "RectangularProduct":
+          updatedProduct = await RectangularProduct.findByIdAndUpdate(productId, updates, { new: true });
+          break;
+        case "CircularProduct":
+          updatedProduct = await CircularProduct.findByIdAndUpdate(productId, updates, { new: true });
+          break;
+        case "SquareProduct":
+          updatedProduct = await SquareProduct.findByIdAndUpdate(productId, updates, { new: true });
+          break;
+        default:
+          throw new Error(`Invalid product type: ${shape}`);
+      }
+
+      if (!updatedProduct) {
+        throw new Error(`Product with ID ${productId} not found`);
+      }
+
+      return { message: "Product updated successfully", product: updatedProduct.toObject() };
+    } catch (error) {
+      console.error("Error updating product:", error);
+      throw error;
+    }
+  });
 };

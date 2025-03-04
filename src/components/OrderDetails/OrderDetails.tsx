@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom"; // ✅ Import useParams
+import { useParams } from "react-router-dom";
 import {
   Box,
   Table,
@@ -15,23 +15,23 @@ import {
 } from "@mui/material";
 
 const OrderDetails: React.FC = () => {
-  const { orderId } = useParams(); // ✅ No generic type needed in TypeScript
+  const { orderId } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (!orderId) return; // ✅ Ensure orderId is valid
-
+      if (!orderId) return;
+  
       try {
         setLoading(true);
         const response = await window.electronAPI.fetchOrderById(orderId);
-
-        if (response.success) {
-          setOrder(response.data as Order);
+  
+        if (response.success && response.data) {
+          setOrder(response.data as Order); // ✅ Ensure `order` is an object
         } else {
-          setError(response.message || "Failed to fetch order details");
+          setError("Failed to fetch order details");
         }
       } catch (err) {
         console.error("Error fetching order details:", err);
@@ -40,9 +40,27 @@ const OrderDetails: React.FC = () => {
         setLoading(false);
       }
     };
-
+  
     fetchOrderDetails();
   }, [orderId]);
+  
+
+  const renderDimensions = (shape: string, dimensions: string) => {
+    const dimObj: { [key: string]: string } = Object.fromEntries(
+      dimensions.split(", ").map((dim) => dim.split(": "))
+    );
+
+    switch (shape) {
+      case "RectangularProduct":
+        return `W: ${dimObj["Width"]}, H: ${dimObj["Height"]}`;
+      case "CircularProduct":
+        return `R: ${dimObj["Radius"]}`;
+      case "SquareProduct":
+        return `Side: ${dimObj["Side"]}`;
+      default:
+        return "N/A";
+    }
+  };
 
   if (loading) {
     return (
@@ -69,15 +87,19 @@ const OrderDetails: React.FC = () => {
         <TableHead>
           <TableRow>
             <TableCell><strong>Product</strong></TableCell>
+            <TableCell><strong>Shape</strong></TableCell>
+            <TableCell><strong>Dimensions</strong></TableCell>
             <TableCell><strong>Quantity</strong></TableCell>
             <TableCell><strong>Unit Price</strong></TableCell>
             <TableCell><strong>Subtotal</strong></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {order?.orderItems.map((product) => (
-            <TableRow key={product.productId}>
+          {order?.orderItems.map((product, index) => (
+            <TableRow key={index}>
               <TableCell>{product.productName}</TableCell>
+              <TableCell>{product.shape}</TableCell>
+              <TableCell>{renderDimensions(product.shape, product.dimensions)}</TableCell>
               <TableCell>{product.quantity}</TableCell>
               <TableCell>${product.unitPrice.toFixed(2)}</TableCell>
               <TableCell>${(product.quantity * product.unitPrice).toFixed(2)}</TableCell>
@@ -86,11 +108,11 @@ const OrderDetails: React.FC = () => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={3}><strong>Total:</strong></TableCell>
+            <TableCell colSpan={5}><strong>Total:</strong></TableCell>
             <TableCell><strong>${order?.totalPrice.toFixed(2)}</strong></TableCell>
           </TableRow>
           <TableRow>
-            <TableCell colSpan={3}><strong>Status:</strong></TableCell>
+            <TableCell colSpan={5}><strong>Status:</strong></TableCell>
             <TableCell>
               {order?.status === "paid" ? "Paid ✅" : "Not Paid ❌"}
             </TableCell>

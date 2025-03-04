@@ -10,6 +10,7 @@ import CustomersTable from './components/CustomersTable/CustomersTable';
 import CreateOrder from './components/CreateOrder/CreateOrder';
 import CustomerProfile from './components/CustomerProfil/CustomerProfil';
 import OrderDetails from './components/OrderDetails/OrderDetails';
+import ProductDetail from './components/ProductDetail/ProductDetail';
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Root element not found");
@@ -24,6 +25,7 @@ root.render(
       <Route path='/main' element={<Sidebar/>}>
           <Route path='products' element={<ProductsPage/>}/>
           <Route path='addproduct' element={<AddProductForm/>}/>
+          <Route path="edit-product/:productId" element={<ProductDetail/>} />
           <Route path='addcustomer' element={<CreateCustomer/>}/>
           <Route path='adduser' element={<AddUserForm/>}/> 
           <Route path='createorder' element={<CreateOrder/>}/>

@@ -40,11 +40,18 @@ const CustomersTable: React.FC = () => {
     navigate(`/main/customer-profil/${id}`);
   };
   
-
-  const handleDelete = (id: string) => {
-    console.log(`Deleting customer with ID: ${id}`);
-    // Implement delete functionality here
+  
+  const handleDelete = async (id: string) => {
+    try {
+      await window.electronAPI.deleteCustomer(id);
+  
+      // ✅ Remove the deleted customer from the UI
+      setCustomers((prevCustomers) => prevCustomers.filter((customer) => customer.id !== id));
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+    }
   };
+  
 
   return (
     <Paper elevation={3} sx={{ padding: 3 }}>

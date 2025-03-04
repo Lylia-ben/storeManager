@@ -195,4 +195,21 @@ export const orderIpcHandlers = (): void => {
       return { success: false, message: "Failed to fetch orders for customer", error };
     }
   });
+  ipcMain.handle("order:togglePaid", async (_, orderId: string) => {
+    try {
+  
+      const order = await Order.findById(orderId);
+      if (!order) {
+        throw new Error("Order not found");
+      }
+  
+      // Toggle status
+      order.status = order.status === "paid" ? "not paid" : "paid";
+      await order.save();
+  
+      return { success: true, status: order.status };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  });
 };

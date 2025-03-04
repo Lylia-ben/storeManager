@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("product:fetchByType", shape),
 
   updateProduct: (productId: string, updateData: Partial<Record<string, any>>) =>
-    ipcRenderer.invoke("product:update", { productId, updateData }),
+    ipcRenderer.invoke("product:update", productId, updateData), // ✅ Pass them separately
 
   // 📌 Customer Management
   createCustomer: (customerData: {

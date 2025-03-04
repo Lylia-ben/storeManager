@@ -11,8 +11,9 @@ import {
   CircularProgress,
   Box,
 } from "@mui/material";
-
+import { useNavigate } from "react-router-dom";
 const RectangularProductTable: React.FC = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,10 @@ const RectangularProductTable: React.FC = () => {
 
     fetchData();
   }, []);
-
+ // edit product
+ const handleEdit = (productId: string) => {
+    navigate(`/main/edit-product/${productId}`);
+  };
   // Handle delete operation
   const handleDelete = async (productId: string) => {
     try {
@@ -46,7 +50,6 @@ const RectangularProductTable: React.FC = () => {
       setError("Failed to delete product.");
     }
   };
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
@@ -60,7 +63,15 @@ const RectangularProductTable: React.FC = () => {
   }
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer
+          component={Paper}
+          sx={{
+            marginLeft: "220px",
+            width: "calc(100% - 200px)", 
+            maxWidth: "900px",
+            marginTop: "20px", // Adds spacing from the top
+          }}
+    >
       <Table>
         <TableHead>
           <TableRow style={{ backgroundColor: "#1565c0" }}>
@@ -92,7 +103,7 @@ const RectangularProductTable: React.FC = () => {
                     color: "#ffffff",
                   }}
                   size="small"
-                  onClick={() => console.log("Edit", product.id)}
+                  onClick={() => handleEdit(product.id)}
                 >
                   Edit
                 </Button>
