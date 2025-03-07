@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { Product, RectangularProduct, CircularProduct, SquareProduct } from '../../database/models/Product/Product';
-
+import mongoose from "mongoose";
 // Register IPC handlers for product-related operations
 export const productIpcHandlers = (): void => {
   // Handle product creation
@@ -86,40 +86,60 @@ export const productIpcHandlers = (): void => {
         throw new Error(`Product with ID ${productId} not found`);
       }
   
-      return { ...product.toObject(), id: String(product._id) }; // Ensure ID is a string
+      return { ...product.toObject(), id: String(product.id) }; // Ensure ID is a string
     } catch (error) {
       console.error("Error fetching product by ID:", error);
       throw error;
     }
   });
-  // 🔹 Handle product update by ID
-  ipcMain.handle("product:update", async (_event, productId, updateData) => {
+  // Update product handler
+  ipcMain.handle("product:update", async (event, productId: string, updateData: any) => {
     try {
-      const { shape, ...updates } = updateData;
+      console.log("Updating Product ID:", productId, "Type:", typeof productId);
+  
+      // Ensure `productId` is correctly formatted as ObjectId
+      const objectId = new mongoose.Types.ObjectId(productId);
+  
+      const existingProduct = await Product.findById(objectId);
+      if (!existingProduct) {
+        throw new Error("Product not found.");
+      }
+  
       let updatedProduct;
-
-      switch (shape) {
+      switch (existingProduct.shape) {
         case "RectangularProduct":
-          updatedProduct = await RectangularProduct.findByIdAndUpdate(productId, updates, { new: true });
+          updatedProduct = await RectangularProduct.findByIdAndUpdate(objectId, updateData, {
+            new: true,
+            runValidators: true,
+          });
           break;
         case "CircularProduct":
-          updatedProduct = await CircularProduct.findByIdAndUpdate(productId, updates, { new: true });
+          updatedProduct = await CircularProduct.findByIdAndUpdate(objectId, updateData, {
+            new: true,
+            runValidators: true,
+          });
           break;
         case "SquareProduct":
-          updatedProduct = await SquareProduct.findByIdAndUpdate(productId, updates, { new: true });
+          updatedProduct = await SquareProduct.findByIdAndUpdate(objectId, updateData, {
+            new: true,
+            runValidators: true,
+          });
           break;
         default:
-          throw new Error(`Invalid product type: ${shape}`);
+          throw new Error("Unknown product shape.");
       }
-
+  
       if (!updatedProduct) {
-        throw new Error(`Product with ID ${productId} not found`);
+        throw new Error("Failed to update product.");
       }
-
-      return { message: "Product updated successfully", product: updatedProduct.toObject() };
+  
+      return updatedProduct.toJSON();
     } catch (error) {
       console.error("Error updating product:", error);
       throw error;
     }
   });
+  
+  
+
 };

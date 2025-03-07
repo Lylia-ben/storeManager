@@ -14,9 +14,6 @@ import { useFormik } from "formik";
 import { useParams, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 
-const shapeOptions = ["Square", "Circular", "Rectangular"] as const;
-type ShapeOption = typeof shapeOptions[number];
-
 const ProductDetail: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
@@ -41,7 +38,6 @@ const ProductDetail: React.FC = () => {
 
     fetchProduct();
   }, [productId]);
-
   // Formik for handling form
   const formik = useFormik({
     enableReinitialize: true, // Ensures the form updates when initialData is fetched
@@ -68,6 +64,13 @@ const ProductDetail: React.FC = () => {
     }),
     onSubmit: async (values) => {
       try {
+        console.log("Updating Product ID:", typeof productId, productId);
+        
+        // Ensure productId is a string before sending
+        if (!productId || typeof productId !== "string") {
+          throw new Error("Invalid product ID");
+        }
+    
         await window.electronAPI.updateProduct(productId, values);
         alert("Product updated successfully!");
         navigate("/main/products"); // Redirect to product list
@@ -75,7 +78,8 @@ const ProductDetail: React.FC = () => {
         console.error("Update failed", err);
         alert("Failed to update product.");
       }
-    },
+    }
+    
   });
 
   if (loading) return <CircularProgress />;
@@ -114,11 +118,6 @@ const ProductDetail: React.FC = () => {
             value={formik.values.shape}
             onChange={formik.handleChange}
           >
-            {/* {shapeOptions.map((shape) => (
-              <MenuItem key={shape} value={shape}>
-               // {shape}
-              </MenuItem>
-           ))} */}
            <MenuItem value="RectangularProduct">Rectangular</MenuItem>
            <MenuItem value="SquareProduct">Square</MenuItem>
            <MenuItem value="CircularProduct">Circular</MenuItem>

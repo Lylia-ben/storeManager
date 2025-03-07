@@ -1,22 +1,21 @@
-
-import mongoose, { Schema, Document, Model, ObjectId } from 'mongoose';
+import mongoose, { Schema, Document, Model } from "mongoose";
 
 // Transform helper function
 function toJSONTransform(doc: any, ret: any) {
-  ret.id = ret._id.toString();
-  delete ret._id;
-  delete ret.__v;
+  ret.id = ret._id?.toString(); // Convert _id to string
+  delete ret._id; // Remove raw ObjectId
+  delete ret.__v; // Remove version key
   return ret;
 }
 
 // Base interface
 interface IProduct extends Document {
-  _id: ObjectId;
+  id: string; // Ensure `id` is always a string
   name: string;
   quantity: number;
   cost: number;
   unitPrice: number;
-  shape: "RectangularProduct" | "SquareProduct" | "CircularProduct"; 
+  shape: "RectangularProduct" | "SquareProduct" | "CircularProduct";
   width?: number;
   height?: number;
   sideLength?: number;
@@ -40,7 +39,6 @@ interface ISquareProduct extends IProduct {
 // Base schema
 const ProductSchema = new Schema<IProduct>(
   {
-    _id: { type: Schema.Types.ObjectId, auto: true },
     name: { type: String, required: true },
     quantity: { type: Number, required: true, min: 0 },
     cost: { type: Number, required: true, min: 0 },
@@ -49,7 +47,9 @@ const ProductSchema = new Schema<IProduct>(
   { discriminatorKey: "shape", timestamps: true }
 );
 
+// Apply transformation to both toJSON and toObject
 ProductSchema.set("toJSON", { transform: toJSONTransform });
+ProductSchema.set("toObject", { transform: toJSONTransform });
 
 // Product model
 const Product: Model<IProduct> = mongoose.model<IProduct>("Product", ProductSchema);
@@ -68,10 +68,11 @@ const SquareProductSchema = new Schema<ISquareProduct>({
   sideLength: { type: Number, required: true },
 });
 
-// Apply transform helper
-RectangularProductSchema.set("toJSON", { transform: toJSONTransform });
-CircularProductSchema.set("toJSON", { transform: toJSONTransform });
-SquareProductSchema.set("toJSON", { transform: toJSONTransform });
+// Apply transformation to discriminators
+[RectangularProductSchema, CircularProductSchema, SquareProductSchema].forEach((schema) => {
+  schema.set("toJSON", { transform: toJSONTransform });
+  schema.set("toObject", { transform: toJSONTransform });
+});
 
 // Discriminators
 const RectangularProduct = Product.discriminator<IRectangularProduct>(
