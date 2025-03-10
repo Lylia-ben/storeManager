@@ -1,15 +1,33 @@
-import React from "react";
-import { Avatar, Box, Button, Grid, Paper, Typography } from "@mui/material";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Avatar, Box, Button, Grid, Paper, Typography, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from "@mui/material";
 
 interface CustomerDataProps {
   customer: Customer;
 }
 
 const CustomerData: React.FC<CustomerDataProps> = ({ customer }) => {
-  console.log(customer);
+  const navigate = useNavigate();
+  const [status, setStatus] = useState(customer.status); // Track local status
+
+  // Handle status change
+  const handleStatusChange = async (event: SelectChangeEvent<string>) => {
+    const newStatus = event.target.value;
+
+    try {
+      const response = await window.electronAPI.toggleCustomerDebt(customer.id);
+      if (response.success) {
+        setStatus(response.status); // Update state
+      } else {
+        console.error("Failed to update status:", response.message);
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, maxWidth: 600, mx: "auto", mt: 4 ,marginLeft:"300px"}}>
+    <Paper elevation={3} sx={{ p: 3, maxWidth: 600, mx: "auto", mt: 4, marginLeft: "300px" }}>
       <Grid container spacing={2} alignItems="center">
         {/* Avatar Section */}
         <Grid item>
@@ -26,14 +44,20 @@ const CustomerData: React.FC<CustomerDataProps> = ({ customer }) => {
           <Typography color="textSecondary">Email: {customer.email}</Typography>
           <Typography color="textSecondary">Address: {customer.address}</Typography>
           <Typography color="textSecondary">Phone: {customer.phoneNumber}</Typography>
-          <Typography color={customer.status === "has debt" ? "error" : "success.main"}>
-            Status: {customer.status === "has debt" ? "Has Debt" : "No Debt"}
-          </Typography>
+
+          {/* Status Selector */}
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <InputLabel>Status</InputLabel>
+            <Select value={status} onChange={handleStatusChange} label="Status">
+              <MenuItem value="has debt">Has Debt</MenuItem>
+              <MenuItem value="no debt">No Debt</MenuItem>
+            </Select>
+          </FormControl>
         </Grid>
 
         {/* Edit Button */}
         <Grid item>
-          <Button variant="contained" color="primary" size="small">
+          <Button variant="contained" color="primary" size="small" onClick={() => navigate(`/main/edit-customer/${customer.id}`)}>
             Edit
           </Button>
         </Grid>

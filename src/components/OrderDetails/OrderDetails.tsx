@@ -12,6 +12,9 @@ import {
   Paper,
   CircularProgress,
   Typography,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from "@mui/material";
 
 const OrderDetails: React.FC = () => {
@@ -23,13 +26,14 @@ const OrderDetails: React.FC = () => {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!orderId) return;
-  
+
       try {
         setLoading(true);
         const response = await window.electronAPI.fetchOrderById(orderId);
-  
+
         if (response.success && response.data) {
-          setOrder(response.data as Order); // ✅ Ensure `order` is an object
+          setOrder(response.data as Order);
+          console.log(order)
         } else {
           setError("Failed to fetch order details");
         }
@@ -40,9 +44,25 @@ const OrderDetails: React.FC = () => {
         setLoading(false);
       }
     };
-  
+
     fetchOrderDetails();
   }, [orderId]);
+
+  const handleStatusChange = async (event: SelectChangeEvent<string>) => {
+    if (!order || !orderId) return;
+  
+    try {
+      const response = await window.electronAPI.toggleOrderPaid(orderId);
+  
+      if (response.success) {
+        setOrder((prev) => prev ? { ...prev, status: response.status } : prev);
+      } else {
+        console.error("Failed to update order status:", response.message);
+      }
+    } catch (error) {
+      console.error("Error toggling order status:", error);
+    }
+  };
   
 
   const renderDimensions = (shape: string, dimensions: string) => {
@@ -114,7 +134,14 @@ const OrderDetails: React.FC = () => {
           <TableRow>
             <TableCell colSpan={5}><strong>Status:</strong></TableCell>
             <TableCell>
-              {order?.status === "paid" ? "Paid ✅" : "Not Paid ❌"}
+              <Select
+                value={order?.status || "pending"}
+                onChange={handleStatusChange}
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="paid">Paid </MenuItem>
+                <MenuItem value="not paid">Not Paid </MenuItem>
+              </Select>
             </TableCell>
           </TableRow>
         </TableFooter>

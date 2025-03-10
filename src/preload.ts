@@ -52,7 +52,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("customer:fetchById", customerId),
 
   updateCustomer: (customerId: string, updateData: Partial<Record<string, any>>) =>
-    ipcRenderer.invoke("customer:update", { customerId, updateData }),
+    ipcRenderer.invoke("customer:update", customerId, updateData), // ✅ Pass separately  
 
   toggleCustomerDebt: (customerId: string) =>
     ipcRenderer.invoke("customer:toggleDebt", customerId),

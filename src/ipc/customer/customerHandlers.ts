@@ -57,37 +57,29 @@ export const customerIpcHandlers = (): void => {
     }
   });
 
-  // 📌 Fetch a single customer by ID
+  // Fetch a customer by ID
   ipcMain.handle("customer:fetchById", async (_event, customerId) => {
     try {
       const customer = await Customer.findById(customerId);
-      if (!customer) {
-        return null; // Return null if customer is not found
-      }
-  
-      return {
-        ...customer.toJSON(),
-        id: customer._id.toString(), // Ensure `id` is a string
-      };
+      return customer ? customer.toJSON() : null;
     } catch (error) {
       console.error("Error fetching customer:", error);
-      return null; // Return null on error instead of an error object
+      return null;
     }
   });
-  
 
-  // 📌 Update a customer's details
-  ipcMain.handle("customer:update", async (_event, { customerId, updateData }) => {
+  // Update customer details
+  ipcMain.handle("customer:update", async (_event, customerId, updateData) => {
     try {
       const updatedCustomer = await Customer.findByIdAndUpdate(customerId, updateData, {
         new: true,
         runValidators: true,
       });
-  
+
       if (!updatedCustomer) {
         return { success: false, message: `Customer with ID ${customerId} not found` };
       }
-  
+
       return {
         success: true,
         data: { ...updatedCustomer.toJSON(), id: updatedCustomer._id.toString() },
@@ -98,6 +90,8 @@ export const customerIpcHandlers = (): void => {
       return { success: false, message: "Failed to update customer", error };
     }
   });
+
+
   
   // 📌 Toggle Status has debt / no debt 
   ipcMain.handle("customer:toggleDebt", async (_event, customerId) => {
