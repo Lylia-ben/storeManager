@@ -41,7 +41,7 @@ const CustomerProfil: React.FC = () => {
     <Box p={3}>
       <CustomerData customer={customer} />
       {/* Pass customerId, total, and status to CustomerOrders */}
-      <CustomerOrders customerId={customer.id} total={customer.totalPrice} status={customer.status} /> 
+      <CustomerOrders customerId={customer.id} /> 
     </Box>
   );
 };

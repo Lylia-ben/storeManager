@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Table,
@@ -15,10 +15,12 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
+  Button,
 } from "@mui/material";
 
 const OrderDetails: React.FC = () => {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,12 +52,13 @@ const OrderDetails: React.FC = () => {
 
   const handleStatusChange = async (event: SelectChangeEvent<string>) => {
     if (!order || !orderId) return;
-  
+
     try {
       const response = await window.electronAPI.toggleOrderPaid(orderId);
-  
+      
+
       if (response.success) {
-        setOrder((prev) => prev ? { ...prev, status: response.status } : prev);
+        setOrder((prev) => (prev ? { ...prev, status: response.status } : prev));
       } else {
         console.error("Failed to update order status:", response.message);
       }
@@ -63,7 +66,6 @@ const OrderDetails: React.FC = () => {
       console.error("Error toggling order status:", error);
     }
   };
-  
 
   const renderDimensions = (shape: string, dimensions: string) => {
     const dimObj: { [key: string]: string } = Object.fromEntries(
@@ -99,10 +101,20 @@ const OrderDetails: React.FC = () => {
   }
 
   return (
-    <TableContainer component={Paper} sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
-      <Typography variant="h5" textAlign="center" mt={2}>
-        Order Details - {order?.id}
-      </Typography>
+    <TableContainer component={Paper} sx={{ maxWidth: 800, mx: "auto", mt: 4, p: 2,marginLeft:"250px" }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5">
+          Order Details - {order?.id}
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate(`/main/edit-order/${orderId}`)}
+        >
+          Edit Order
+        </Button>
+      </Box>
+
       <Table>
         <TableHead>
           <TableRow>
@@ -139,8 +151,8 @@ const OrderDetails: React.FC = () => {
                 onChange={handleStatusChange}
                 sx={{ minWidth: 120 }}
               >
-                <MenuItem value="paid">Paid </MenuItem>
-                <MenuItem value="not paid">Not Paid </MenuItem>
+                <MenuItem value="paid">Paid</MenuItem>
+                <MenuItem value="not paid">Not Paid</MenuItem>
               </Select>
             </TableCell>
           </TableRow>

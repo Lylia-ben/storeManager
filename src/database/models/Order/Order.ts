@@ -50,10 +50,10 @@ const OrderSchema = new Schema<IOrder>(
 OrderSchema.set("toJSON", {
   transform: function (doc, ret) {
     ret.id = ret._id.toString();
-    ret.customer = ret.customer.toString(); // Convert customer ID to string
+    ret.customer = ret.customer ? ret.customer.toString() : null; // Handle undefined customer
     ret.orderItems = ret.orderItems.map((item: any) => ({
       ...item,
-      product: item.product.toString(), // Convert product ID to string
+      product: item.product ? item.product.toString() : null, // Handle undefined product
     }));
     delete ret._id;
     delete ret.__v;

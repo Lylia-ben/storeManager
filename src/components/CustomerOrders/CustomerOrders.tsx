@@ -16,16 +16,8 @@ import {
   MenuItem,
 } from "@mui/material";
 
-interface Order {
-  id: string;
-  total: number;
-  status: "paid" | "not paid";
-}
-
 interface CustomerOrdersProps {
   customerId: string;
-  total: number;
-  status: "has debt" | "no debt";
 }
 
 const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
@@ -35,26 +27,29 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("Customer ID in frontend:", customerId); // Debugging line
     const fetchOrders = async () => {
       try {
         setLoading(true);
         const response = await window.electronAPI.fetchOrdersByCustomerId(customerId);
-
-        console.log("API Response:", response);
-
-        if (response.success && Array.isArray(response.data)) {
-          const validOrders: Order[] = response.data
-            .map((order: any) => ({
-              id: String(order.id),
-              total: Number(order.totalPrice),
-              status: order.status as "paid" | "not paid",
-            }))
-            .filter((order) => order.id && !isNaN(order.total));
-
-          setOrders(validOrders);
-        } else {
-          setError(response.message || "Failed to fetch orders");
+        console.log("API Response:", response); // Debugging line
+  
+        if (!response || !response.success) {
+          setError(response?.message || "Failed to fetch orders");
+          return;
         }
+  
+        const formattedOrders: Order[] = response.data.map((order: any) => ({
+          id: String(order.id || order._id),
+          customer: order.customer || "",
+          orderItems: Array.isArray(order.orderItems) ? order.orderItems : [],
+          totalPrice: !isNaN(order.totalPrice) ? Number(order.totalPrice) : 0,
+          status: order.status === "paid" ? "paid" : "not paid",
+          createdAt: order.createdAt || new Date().toISOString(),
+          updatedAt: order.updatedAt || new Date().toISOString(),
+        }));
+  
+        setOrders(formattedOrders);
       } catch (err) {
         console.error("Error fetching orders:", err);
         setError("An error occurred while fetching orders");
@@ -62,41 +57,34 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
         setLoading(false);
       }
     };
-
+  
     if (customerId) {
       fetchOrders();
     }
   }, [customerId]);
+  
 
-  // Function to toggle the order status
   const toggleOrderStatus = async (orderId: string, currentStatus: "paid" | "not paid") => {
     try {
-      await window.electronAPI.toggleOrderPaid(orderId);
-
-      // Optimistically update UI
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === orderId
-            ? { ...order, status: currentStatus === "paid" ? "not paid" : "paid" }
-            : order
-        )
+      const newStatus = currentStatus === "paid" ? "not paid" : "paid";
+      setOrders((prev) =>
+        prev.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order))
       );
+      await window.electronAPI.toggleOrderPaid(orderId);
     } catch (err) {
       console.error("Error toggling order status:", err);
     }
   };
-  // Function to delete the order
+
   const handleDeleteOrder = async (orderId: string) => {
     try {
+      setOrders((prev) => prev.filter((order) => order.id !== orderId));
       await window.electronAPI.deleteOrder(orderId);
-  
-      // ✅ Remove the deleted order from the UI
-      setOrders((prevOrders) => prevOrders.filter((order) => order.id !== orderId));
     } catch (err) {
       console.error("Error deleting order:", err);
     }
   };
-  
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -114,7 +102,7 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
   }
 
   return (
-    <TableContainer component={Paper} sx={{ maxWidth: 800, mx: "auto", mt: 4, marginLeft: "300px" }}>
+    <TableContainer component={Paper} sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
       <Table>
         <TableHead>
           <TableRow>
@@ -129,12 +117,12 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
             orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell>{order.id}</TableCell>
-                <TableCell>${order.total.toFixed(2)}</TableCell>
+                <TableCell>${order.totalPrice.toFixed(2)}</TableCell>
                 <TableCell>
                   <Select
                     value={order.status}
                     size="small"
-                    onChange={() => toggleOrderStatus(order.id, order.status)}
+                    onChange={(e) => toggleOrderStatus(order.id, e.target.value as "paid" | "not paid")}
                   >
                     <MenuItem value="not paid">Not Paid</MenuItem>
                     <MenuItem value="paid">Paid</MenuItem>
@@ -158,7 +146,6 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
                   >
                     Delete
                   </Button>
-
                 </TableCell>
               </TableRow>
             ))

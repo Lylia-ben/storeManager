@@ -2,6 +2,7 @@ import { ipcMain } from "electron";
 import { Order } from "../../database/models/Order/Order";
 import { Customer } from "../../database/models/Customer/Customer";
 import { Product } from "../../database/models/Product/Product";
+import mongoose from "mongoose";
 
 export const orderIpcHandlers = (): void => {
   // 📌 Create Order
@@ -42,7 +43,7 @@ export const orderIpcHandlers = (): void => {
           totalPrice += itemTotal;
 
           processedItems.push({
-            product: product._id,
+            product: product.id,
             productName: product.name,
             shape: product.shape,
             dimensions:
@@ -69,7 +70,7 @@ export const orderIpcHandlers = (): void => {
         });
 
         const savedOrder = await newOrder.save();
-        console.log(`✅ Order saved with ID: ${savedOrder._id}`);
+        console.log(`✅ Order saved with ID: ${savedOrder.id}`);
 
         // Update customer
         customer.totalPrice += totalPrice;
@@ -163,7 +164,7 @@ export const orderIpcHandlers = (): void => {
       // Update customer total debt
       const customer = await Customer.findById(updatedOrder.customer);
       if (customer) {
-        const unpaidOrders = await Order.find({ customer: customer._id, status: "pending" });
+        const unpaidOrders = await Order.find({ customer: customer._id});
         customer.totalPrice = unpaidOrders.reduce((sum, order) => sum + order.totalPrice, 0);
         customer.status = customer.totalPrice > 0 ? "has debt" : "no debt";
         await customer.save();
@@ -178,11 +179,13 @@ export const orderIpcHandlers = (): void => {
 
   // 📌 Fetch Orders by Customer ID
   ipcMain.handle("order:fetchByCustomerId", async (_event, customerId) => {
+    console.log("Received customer ID in backend:", customerId); // Debugging line
     try {
-      if (!customerId) throw new Error("Customer ID is required");
-
+      if (!customerId || !mongoose.Types.ObjectId.isValid(customerId)) {
+        throw new Error("Invalid or missing customer ID");
+      }
+  
       const orders = await Order.find({ customer: customerId }).populate("orderItems.product");
-
       return {
         success: true,
         data: orders.map((order) => ({
@@ -192,7 +195,7 @@ export const orderIpcHandlers = (): void => {
       };
     } catch (error) {
       console.error("❌ Error fetching orders for customer:", error);
-      return { success: false, message: "Failed to fetch orders for customer", error };
+      return { success: false, message: "Failed to fetch orders for customer", error: error.message };
     }
   });
   ipcMain.handle("order:togglePaid", async (_, orderId: string) => {

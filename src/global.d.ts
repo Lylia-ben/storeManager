@@ -28,7 +28,7 @@ declare global {
       fetchOrderById: (orderId: string) => Promise<ApiResponse & { data?: Order }>;
       updateOrder: (orderId: string, updateData: Partial<Order>) => Promise<ApiResponse & { data?: Order }>;
       fetchOrdersByCustomerId: (customerId: string) => Promise<ApiResponse & { data?: Order[] }>;
-      toggleOrderPaid: (orderId: string) => Promise<ApiResponse & { status: "pending" | "paid" }>;
+      toggleOrderPaid: (orderId: string) => Promise<ApiResponse & { status: "not paid" | "paid" }>;
 
     };
   }
@@ -95,7 +95,7 @@ declare global {
       total: number;
     }[];
     totalPrice: number;
-    status: "pending" | "paid";
+    status: "not paid" | "paid";
     createdAt: Date | string;
     updatedAt: Date | string;
   }
