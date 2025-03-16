@@ -1,7 +1,8 @@
 import mongoose, { Schema, Document, Types, Model } from "mongoose";
 
-// 🟢 Order Item Interface (Represents a product in an order)
+// 🟢 Order Item Interface
 interface IOrderItem {
+  id: string; // Unique ID for each order item
   product: Types.ObjectId; // Reference to Product
   productName: string; // Snapshot of product name at time of order
   shape: "RectangularProduct" | "CircularProduct" | "SquareProduct";
@@ -15,7 +16,7 @@ interface IOrderItem {
 interface IOrder extends Document {
   customer: Types.ObjectId; // Reference to Customer
   orderItems: IOrderItem[];
-  status: "paid" | "not paid"; // ✅ Updated to match your requirement
+  status: "paid" | "not paid";
   totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -24,10 +25,11 @@ interface IOrder extends Document {
 // 🛒 Order Item Schema
 const OrderItemSchema = new Schema<IOrderItem>(
   {
+    id: { type: String, required: true, unique: true }, // Unique ID for each item
     product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     productName: { type: String, required: true },
     shape: { type: String, enum: ["RectangularProduct", "CircularProduct", "SquareProduct"], required: true },
-    dimensions: { type: String, required: true }, // Stores dimension details as a formatted string
+    dimensions: { type: String, required: true },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
@@ -40,7 +42,7 @@ const OrderSchema = new Schema<IOrder>(
   {
     customer: { type: Schema.Types.ObjectId, ref: "Customer", required: true },
     orderItems: { type: [OrderItemSchema], required: true },
-    status: { type: String, enum: ["paid", "not paid"], default: "not paid" }, // ✅ Updated to match your requirement
+    status: { type: String, enum: ["paid", "not paid"], default: "not paid" },
     totalPrice: { type: Number, required: true, min: 0 },
   },
   { timestamps: true, strict: true }
@@ -50,10 +52,10 @@ const OrderSchema = new Schema<IOrder>(
 OrderSchema.set("toJSON", {
   transform: function (doc, ret) {
     ret.id = ret._id.toString();
-    ret.customer = ret.customer ? ret.customer.toString() : null; // Handle undefined customer
+    ret.customer = ret.customer ? ret.customer.toString() : null;
     ret.orderItems = ret.orderItems.map((item: any) => ({
       ...item,
-      product: item.product ? item.product.toString() : null, // Handle undefined product
+      product: item.product ? item.product.toString() : null,
     }));
     delete ret._id;
     delete ret.__v;

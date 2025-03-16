@@ -30,6 +30,18 @@ declare global {
       fetchOrdersByCustomerId: (customerId: string) => Promise<ApiResponse & { data?: Order[] }>;
       toggleOrderPaid: (orderId: string) => Promise<ApiResponse & { status: "not paid" | "paid" }>;
 
+      // 🔹 Order Item Handlers
+      updateOrderItem: (payload: {
+        orderId: string;
+        itemId: string;
+        updateData: Partial<{
+          quantity: number;
+          unitPrice: number;
+          total: number;
+        }>;
+      }) => Promise<ApiResponse & { data?: Order }>;
+
+      deleteOrderItem: (payload: { orderId: string; itemId: string }) => Promise<ApiResponse & { data?: Order }>;
     };
   }
 
@@ -86,6 +98,7 @@ declare global {
     id: string;
     customer: string;
     orderItems: {
+      id: string; // Unique ID for each order item
       productId: string;
       productName: string;
       shape: ProductShape;

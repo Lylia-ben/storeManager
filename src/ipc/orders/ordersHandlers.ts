@@ -3,6 +3,7 @@ import { Order } from "../../database/models/Order/Order";
 import { Customer } from "../../database/models/Customer/Customer";
 import { Product } from "../../database/models/Product/Product";
 import mongoose from "mongoose";
+import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs
 
 export const orderIpcHandlers = (): void => {
   // 📌 Create Order
@@ -43,6 +44,7 @@ export const orderIpcHandlers = (): void => {
           totalPrice += itemTotal;
 
           processedItems.push({
+            id: uuidv4(), // Generate a unique ID for each order item
             product: product.id,
             productName: product.name,
             shape: product.shape,
@@ -58,7 +60,6 @@ export const orderIpcHandlers = (): void => {
             unitPrice: product.unitPrice,
             total: itemTotal,
           });
-          
         }
 
         // Create order
@@ -164,7 +165,7 @@ export const orderIpcHandlers = (): void => {
       // Update customer total debt
       const customer = await Customer.findById(updatedOrder.customer);
       if (customer) {
-        const unpaidOrders = await Order.find({ customer: customer._id});
+        const unpaidOrders = await Order.find({ customer: customer._id });
         customer.totalPrice = unpaidOrders.reduce((sum, order) => sum + order.totalPrice, 0);
         customer.status = customer.totalPrice > 0 ? "has debt" : "no debt";
         await customer.save();
@@ -184,7 +185,7 @@ export const orderIpcHandlers = (): void => {
       if (!customerId || !mongoose.Types.ObjectId.isValid(customerId)) {
         throw new Error("Invalid or missing customer ID");
       }
-  
+
       const orders = await Order.find({ customer: customerId }).populate("orderItems.product");
       return {
         success: true,
@@ -198,21 +199,82 @@ export const orderIpcHandlers = (): void => {
       return { success: false, message: "Failed to fetch orders for customer", error: error.message };
     }
   });
+
+  // 📌 Toggle Order Paid Status
   ipcMain.handle("order:togglePaid", async (_, orderId: string) => {
     try {
-  
       const order = await Order.findById(orderId);
       if (!order) {
         throw new Error("Order not found");
       }
-  
+
       // Toggle status
       order.status = order.status === "paid" ? "not paid" : "paid";
       await order.save();
-  
+
       return { success: true, status: order.status };
     } catch (error: any) {
       return { success: false, message: error.message };
+    }
+  });
+
+  // 📌 Update Order Item
+  ipcMain.handle("order:updateOrderItem", async (_event, { orderId, itemId, updateData }) => {
+    try {
+      const order = await Order.findById(orderId);
+      if (!order) return { success: false, message: "Order not found" };
+
+      // Find the item to update
+      const itemIndex = order.orderItems.findIndex((item) => item.id === itemId);
+      if (itemIndex === -1) return { success: false, message: "Item not found in order" };
+
+      // Update the item
+      order.orderItems[itemIndex] = { ...order.orderItems[itemIndex], ...updateData };
+
+      // Recalculate total price
+      const totalPrice = order.orderItems.reduce((sum, item) => sum + item.total, 0);
+
+      // Save the updated order
+      const updatedOrder = await Order.findByIdAndUpdate(
+        orderId,
+        { orderItems: order.orderItems, totalPrice },
+        { new: true, runValidators: true }
+      ).populate("customer").populate("orderItems.product");
+
+      if (!updatedOrder) return { success: false, message: "Failed to update order" };
+
+      return { success: true, data: updatedOrder.toJSON(), message: "Order item updated successfully" };
+    } catch (error) {
+      console.error("❌ Error updating order item:", error);
+      return { success: false, message: "Failed to update order item", error };
+    }
+  });
+
+  // 📌 Delete Order Item
+  ipcMain.handle("order:deleteOrderItem", async (_event, { orderId, itemId }) => {
+    try {
+      const order = await Order.findById(orderId);
+      if (!order) return { success: false, message: "Order not found" };
+
+      // Filter out the deleted item
+      const updatedOrderItems = order.orderItems.filter((item) => item.id !== itemId);
+
+      // Recalculate total price
+      const totalPrice = updatedOrderItems.reduce((sum, item) => sum + item.total, 0);
+
+      // Save the updated order
+      const updatedOrder = await Order.findByIdAndUpdate(
+        orderId,
+        { orderItems: updatedOrderItems, totalPrice },
+        { new: true, runValidators: true }
+      ).populate("customer").populate("orderItems.product");
+
+      if (!updatedOrder) return { success: false, message: "Failed to update order" };
+
+      return { success: true, data: updatedOrder.toJSON(), message: "Order item deleted successfully" };
+    } catch (error) {
+      console.error("❌ Error deleting order item:", error);
+      return { success: false, message: "Failed to delete order item", error };
     }
   });
 };

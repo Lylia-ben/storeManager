@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("product:fetchByType", shape),
 
   updateProduct: (productId: string, updateData: Partial<Record<string, any>>) =>
-    ipcRenderer.invoke("product:update", productId, updateData), // ✅ Pass them separately
+    ipcRenderer.invoke("product:update", productId, updateData),
 
   // 📌 Customer Management
   createCustomer: (customerData: {
@@ -52,7 +52,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("customer:fetchById", customerId),
 
   updateCustomer: (customerId: string, updateData: Partial<Record<string, any>>) =>
-    ipcRenderer.invoke("customer:update", customerId, updateData), // ✅ Pass separately  
+    ipcRenderer.invoke("customer:update", customerId, updateData),
 
   toggleCustomerDebt: (customerId: string) =>
     ipcRenderer.invoke("customer:toggleDebt", customerId),
@@ -79,4 +79,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   toggleOrderPaid: (orderId: string) =>
     ipcRenderer.invoke("order:togglePaid", orderId),
+
+  // 📌 Order Item Management
+  updateOrderItem: (payload: {
+    orderId: string;
+    itemId: string;
+    updateData: Partial<{
+      quantity: number;
+      unitPrice: number;
+      total: number;
+    }>;
+  }) => ipcRenderer.invoke("order:updateOrderItem", payload),
+
+  deleteOrderItem: (payload: { orderId: string; itemId: string }) =>
+    ipcRenderer.invoke("order:deleteOrderItem", payload),
 });
