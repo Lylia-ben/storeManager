@@ -15,6 +15,8 @@ import {
   Alert,
   TextField,
 } from "@mui/material";
+import ProductShapeSelector from "../ShapeSelector/ShapeSelector";
+import ProductSelector from "../ProductSelector/ProductSelector";
 
 const EditOrder = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -22,6 +24,8 @@ const EditOrder = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedShape, setSelectedShape] = useState<"Circular" | "Square" | "Rectangular">("Rectangular");
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // Fetch order details
   useEffect(() => {
@@ -64,6 +68,34 @@ const EditOrder = () => {
     }));
   };
 
+  // Handle adding a product
+  const handleAddProduct = () => {
+    if (!selectedProduct || !order) return;
+
+    const newItem = {
+      id: String(Math.random()), // Generate a unique ID for the new item
+      productName: selectedProduct.name,
+      shape: selectedProduct.shape,
+      dimensions:
+        selectedProduct.shape === "Rectangular"
+          ? `Width: ${selectedProduct.width}cm, Height: ${selectedProduct.height}cm`
+          : selectedProduct.shape === "Square"
+          ? `Side: ${selectedProduct.sideLength}cm`
+          : `Radius: ${selectedProduct.radius}cm`,
+      quantity: 1,
+      unitPrice: selectedProduct.unitPrice,
+      total: selectedProduct.unitPrice, // Initial total (quantity * unitPrice)
+    };
+
+    setOrder((prevOrder) => ({
+      ...prevOrder!,
+      orderItems: [...prevOrder!.orderItems, newItem],
+    }));
+
+    // Reset selected product
+    setSelectedProduct(null);
+  };
+
   // Handle saving the updated order
   const handleSaveOrder = async () => {
     if (!order) return;
@@ -81,6 +113,7 @@ const EditOrder = () => {
 
       console.log("Updated Order Items:", updatedOrderItems); // Debugging
 
+      // Send the updated order items to the backend
       const response = await window.electronAPI.updateOrder(order.id, updatedOrderItems);
       if (response.success) {
         navigate(`/main/order-details/${order.id}`); // Redirect to order details page
@@ -124,6 +157,26 @@ const EditOrder = () => {
       <Typography variant="h4" gutterBottom>
         Edit Order
       </Typography>
+
+      {/* Shape and Product Selectors */}
+      <Box sx={{ display: "flex", gap: 2, marginBottom: 3 }}>
+        <ProductShapeSelector
+          selectedShape={selectedShape}
+          onShapeSelect={setSelectedShape}
+        />
+        <ProductSelector
+          shape={selectedShape}
+          onSelect={setSelectedProduct}
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleAddProduct}
+          disabled={!selectedProduct}
+        >
+          Add Product
+        </Button>
+      </Box>
 
       {/* Order Items Table */}
       <TableContainer component={Paper} sx={{ marginBottom: 3 }}>
