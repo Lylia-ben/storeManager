@@ -32,8 +32,16 @@ contextBridge.exposeInMainWorld("electronAPI", {
   fetchProductsByType: (shape: "Rectangular" | "Circular" | "Square") =>
     ipcRenderer.invoke("product:fetchByType", shape),
 
-  updateProduct: (productId: string, updateData: Partial<Record<string, any>>) =>
-    ipcRenderer.invoke("product:update", productId, updateData),
+  updateProduct: (productId: string, updateData: Partial<{
+    name: string;
+    quantity: number;
+    cost: number;
+    unitPrice: number;
+    width?: number;
+    height?: number;
+    radius?: number;
+    sideLength?: number;
+  }>) => ipcRenderer.invoke("product:update", productId, updateData),
 
   // 📌 Customer Management
   createCustomer: (customerData: {
@@ -51,36 +59,40 @@ contextBridge.exposeInMainWorld("electronAPI", {
   fetchCustomerById: (customerId: string) =>
     ipcRenderer.invoke("customer:fetchById", customerId),
 
-  updateCustomer: (customerId: string, updateData: Partial<Record<string, any>>) =>
-    ipcRenderer.invoke("customer:update", customerId, updateData),
+  updateCustomer: (customerId: string, updateData: Partial<{
+    name: string;
+    address?: string;
+    email?: string;
+    phoneNumber: string;
+  }>) => ipcRenderer.invoke("customer:update", customerId, updateData),
 
   toggleCustomerDebt: (customerId: string) =>
     ipcRenderer.invoke("customer:toggleDebt", customerId),
 
   // 📌 Order Management
-createOrder: (orderData: {
-  customerId: string;
-  orderItems: { productName: string; shape: string; dimensions: string; quantity: number; unitPrice: number }[];
-}) => ipcRenderer.invoke("order:create", orderData),
+  createOrder: (orderData: {
+    customerId: string;
+    orderItems: { productId: string; customerQuantity: number }[];
+  }) => ipcRenderer.invoke("order:create", orderData),
 
-fetchAllOrders: () => ipcRenderer.invoke("order:fetchAll"),
+  fetchAllOrders: () => ipcRenderer.invoke("order:fetchAll"),
 
-fetchOrderById: (orderId: string) =>
-  ipcRenderer.invoke("order:fetchById", orderId),
+  fetchOrderById: (orderId: string) =>
+    ipcRenderer.invoke("order:fetchById", orderId),
 
-deleteOrder: (orderId: string) =>
-  ipcRenderer.invoke("order:delete", orderId),
+  deleteOrder: (orderId: string) =>
+    ipcRenderer.invoke("order:delete", orderId),
 
-updateOrder: (orderId: string, orderItems: any[]) =>
-  ipcRenderer.invoke("order:update", orderId, orderItems),
+  updateOrder: (orderId: string, updatedOrderItems: OrderItem[]) =>
+  ipcRenderer.invoke("order:update-order", { orderId, updatedOrderItems }),
 
-fetchOrdersByCustomerId: (customerId: string) =>
-  ipcRenderer.invoke("order:fetchByCustomerId", customerId),
+  fetchOrdersByCustomerId: (customerId: string) =>
+    ipcRenderer.invoke("order:fetchByCustomerId", customerId),
 
-toggleOrderPaid: (orderId: string) =>
-  ipcRenderer.invoke("order:togglePaid", orderId),
+  toggleOrderStatus: (orderId: string) =>
+    ipcRenderer.invoke("order:toggleStatus", orderId),
 
-// 📌 Order Item Management
-deleteOrderItem: (payload: { orderId: string; itemId: string }) =>
-  ipcRenderer.invoke("order:deleteOrderItem", payload),
+  // 📌 Order Item Management
+  deleteOrderItem: (orderId: string, itemId: string) =>
+    ipcRenderer.invoke("order:item:delete", orderId, itemId),
 });

@@ -28,22 +28,24 @@ declare global {
       fetchOrderById: (orderId: string) => Promise<ApiResponse & { data?: Order }>;
       updateOrder: (
         orderId: string,
-        orderItems: any[]
+        updatedOrderItems: OrderItem[]
       ) => Promise<ApiResponse & { data?: Order }>;
       fetchOrdersByCustomerId: (customerId: string) => Promise<ApiResponse & { data?: Order[] }>;
-      toggleOrderPaid: (orderId: string) => Promise<ApiResponse & { status: "not paid" | "paid" }>;
+      toggleOrderStatus: (orderId: string) => Promise<ApiResponse & { status: "not paid" | "paid"; data?: Order }>;
 
       // 🔹 Order Item Handlers
-      deleteOrderItem: (payload: { orderId: string; itemId: string }) => Promise<ApiResponse & { data?: Order }>;
+      deleteOrderItem: (orderId: string, itemId: string) => Promise<ApiResponse & { data?: Order }>;
+
     };
   }
 
   // 🔹 Common Types
-  type ProductShape = "Square" | "Circular" | "Rectangular";
+  type ProductShape = "Rectangular" | "Square" | "Circular";
 
   interface ApiResponse {
     success: boolean;
     message: string;
+    error?: any; // Optional error field for error handling
   }
 
   // 🔹 Product Types
@@ -84,31 +86,32 @@ declare global {
   // 🔹 Order Types
   interface OrderInput {
     customerId: string;
-    orderItems: {
-      productName: string; // ✅ Added `productName`
-      shape: ProductShape; // ✅ Added `shape`
-      dimensions: string; // ✅ Added `dimensions`
-      quantity: number;
-      unitPrice: number; // ✅ Added `unitPrice`
-    }[];
+    orderItems: OrderItem[];
   }
 
   interface Order {
     id: string;
-    customer: string;
-    orderItems: {
-      id: string; // Unique ID for each order item
-      productName: string; // ✅ Added `productName`
-      shape: ProductShape; // ✅ Added `shape`
-      dimensions: string; // ✅ Added `dimensions`
-      quantity: number;
-      unitPrice: number; // ✅ Added `unitPrice`
-      total: number; // ✅ Added `total`
-    }[];
-    totalPrice: number;
-    status: "not paid" | "paid";
-    createdAt: Date | string;
-    updatedAt: Date | string;
+    customerId: string;
+    orderItems: OrderItem[];
+    total: number;
+    status: "paid" | "not paid";
+    createdAt: string | Date;
+    updatedAt: string | Date;
+  }
+  interface OrderItem {
+    id: string;
+    productId: string;
+    name: string;
+    quantity: number;
+    shape: "Rectangular" | "Square" | "Circular";
+    width?: number;
+    height?: number;
+    sideLength?: number;
+    radius?: number;
+    customerQuantity: number;
+    unitPrice: number;
+    cost: number;
+    totalAmount: number;
   }
 }
 

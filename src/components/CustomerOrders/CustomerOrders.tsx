@@ -33,22 +33,22 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
         setLoading(true);
         const response = await window.electronAPI.fetchOrdersByCustomerId(customerId);
         console.log("API Response:", response); // Debugging line
-  
+
         if (!response || !response.success) {
           setError(response?.message || "Failed to fetch orders");
           return;
         }
-  
+
         const formattedOrders: Order[] = response.data.map((order: any) => ({
           id: String(order.id || order._id),
-          customer: order.customer || "",
+          customerId: order.customerId || "", // ✅ Use `customerId`
           orderItems: Array.isArray(order.orderItems) ? order.orderItems : [],
-          totalPrice: !isNaN(order.totalPrice) ? Number(order.totalPrice) : 0,
+          total: !isNaN(order.total) ? Number(order.total) : 0, // ✅ Use `total`
           status: order.status === "paid" ? "paid" : "not paid",
           createdAt: order.createdAt || new Date().toISOString(),
           updatedAt: order.updatedAt || new Date().toISOString(),
         }));
-  
+
         setOrders(formattedOrders);
       } catch (err) {
         console.error("Error fetching orders:", err);
@@ -57,12 +57,11 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
         setLoading(false);
       }
     };
-  
+
     if (customerId) {
       fetchOrders();
     }
   }, [customerId]);
-  
 
   const toggleOrderStatus = async (orderId: string, currentStatus: "paid" | "not paid") => {
     try {
@@ -70,7 +69,7 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
       setOrders((prev) =>
         prev.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order))
       );
-      await window.electronAPI.toggleOrderPaid(orderId);
+      await window.electronAPI.toggleOrderStatus(orderId); // ✅ Use `toggleOrderStatus`
     } catch (err) {
       console.error("Error toggling order status:", err);
     }
@@ -113,49 +112,51 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {orders.length > 0 ? (
-            orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell>{order.id}</TableCell>
-                <TableCell>${order.totalPrice.toFixed(2)}</TableCell>
-                <TableCell>
-                  <Select
-                    value={order.status}
-                    size="small"
-                    onChange={(e) => toggleOrderStatus(order.id, e.target.value as "paid" | "not paid")}
-                  >
-                    <MenuItem value="not paid">Not Paid</MenuItem>
-                    <MenuItem value="paid">Paid</MenuItem>
-                  </Select>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    sx={{ mr: 1 }}
-                    onClick={() => navigate(`/main/order-details/${order.id}`)}
-                  >
-                    Details
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    size="small"
-                    onClick={() => handleDeleteOrder(order.id)}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={4} align="center">
-                No orders found.
-              </TableCell>
-            </TableRow>
-          )}
+            {orders.length > 0 ? (
+              orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell>{order.id}</TableCell>
+                  <TableCell>${order.total.toFixed(2)}</TableCell> 
+                  <TableCell>
+                    <Select
+                      value={order.status}
+                      size="small"
+                      onChange={(e) => toggleOrderStatus(order.id, e.target.value as "paid" | "not paid")}
+                    >
+                      <MenuItem value="not paid">Not Paid</MenuItem>
+                      <MenuItem value="paid">Paid</MenuItem>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      sx={{ mr: 1 }}
+                      onClick={() => navigate(`/main/order-details/${order.id}`)}
+                    >
+                      Details
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => handleDeleteOrder(order.id)}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <>
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    No orders found.
+                  </TableCell>
+                </TableRow>
+              </>
+            )}
         </TableBody>
       </Table>
     </TableContainer>

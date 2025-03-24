@@ -34,8 +34,10 @@ const OrderDetail = () => {
         const response = await window.electronAPI.fetchOrderById(orderId);
         if (response.success && response.data) {
           setOrder(response.data);
+          console.log(response)
         } else {
           setError(response.message || "Failed to fetch order details");
+          console.log(response)
         }
       } catch (err) {
         setError("Failed to fetch order details");
@@ -50,22 +52,21 @@ const OrderDetail = () => {
   // Handle deleting an item from the order
   const handleDeleteItem = async (itemId: string) => {
     if (!order) return;
-
-    try {
-      const response = await window.electronAPI.deleteOrderItem({
-        orderId: order.id,
-        itemId,
-      });
-
-      if (response.success && response.data) {
-        setOrder(response.data); // Update the order state
-      } else {
-        setError(response.message || "Failed to delete item from order");
-      }
-    } catch (err) {
-      setError("Failed to delete item from order");
+  
+    const response = await window.electronAPI.deleteOrderItem(orderId, itemId);
+  
+    if (response.success) {
+      setOrder((prevOrder) => ({
+        ...prevOrder!,
+        orderItems: prevOrder!.orderItems.filter((item) => item.id !== itemId),
+      }));
+    } else {
+      alert(response.message);
     }
   };
+  
+  
+  
 
   // Handle updating the order status
   const handleStatusChange = async (event: SelectChangeEvent<"paid" | "not paid">) => {
@@ -73,14 +74,16 @@ const OrderDetail = () => {
 
     const newStatus = event.target.value as "paid" | "not paid";
     try {
-      const response = await window.electronAPI.toggleOrderPaid(order.id);
+      const response = await window.electronAPI.toggleOrderStatus(order.id);
       if (response.success) {
         setOrder((prevOrder) => ({
           ...prevOrder!,
           status: newStatus,
         }));
+        console.log(response)
       } else {
         setError(response.message || "Failed to update order status");
+        console.log(response)
       }
     } catch (err) {
       setError("Failed to update order status");
@@ -104,7 +107,7 @@ const OrderDetail = () => {
   // Error state
   if (error) {
     return (
-      <Alert severity="error" sx={{ margin: 2 }}>
+      <Alert severity="error" sx={{ margin: 2,marginLeft:"250px" }}>
         {error}
       </Alert>
     );
@@ -142,12 +145,16 @@ const OrderDetail = () => {
           <TableBody>
             {order.orderItems.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>{item.productName}</TableCell>
+                <TableCell>{item.name}</TableCell>
                 <TableCell>{item.shape}</TableCell>
-                <TableCell>{item.dimensions}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell>${item.unitPrice.toFixed(2)}</TableCell>
-                <TableCell>${item.total.toFixed(2)}</TableCell>
+                <TableCell>
+                  {item.shape === "Rectangular" && `${item.width} x ${item.height}`}
+                  {item.shape === "Square" && `${item.sideLength} `}
+                  {item.shape === "Circular" && `Radius: ${item.radius}`}
+                </TableCell>
+                <TableCell>{item.customerQuantity}</TableCell>
+                <TableCell>{item.unitPrice.toFixed(2)}</TableCell>
+                <TableCell>{item.totalAmount.toFixed(2)}</TableCell>
                 <TableCell>
                   <Button
                     variant="contained"
@@ -166,7 +173,7 @@ const OrderDetail = () => {
       {/* Total Price */}
       <Box sx={{ marginBottom: 2 }}>
         <Typography variant="h6">
-          <strong>Total Price:</strong> ${order.totalPrice.toFixed(2)}
+          <strong>Total Price:</strong> ${order.total.toFixed(2)}
         </Typography>
       </Box>
 

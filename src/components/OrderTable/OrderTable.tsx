@@ -30,11 +30,11 @@ const OrderTable: React.FC<OrderTableProps> = ({ products, onQuantityChange }) =
               <TableRow key={product.id}>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>
-                  {product.shape === "RectangularProduct" && product.width && product.height
+                  {product.shape === "Rectangular" && product.width && product.height
                     ? `W: ${product.width}, H: ${product.height}`
-                    : product.shape === "SquareProduct" && product.sideLength
+                    : product.shape === "Square" && product.sideLength
                     ? `Side: ${product.sideLength}`
-                    : product.shape === "CircularProduct" && product.radius
+                    : product.shape === "Circular" && product.radius
                     ? `Radius: ${product.radius}`
                     : "N/A"}
                 </TableCell>

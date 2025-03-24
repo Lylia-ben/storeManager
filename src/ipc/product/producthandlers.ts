@@ -107,19 +107,19 @@ export const productIpcHandlers = (): void => {
   
       let updatedProduct;
       switch (existingProduct.shape) {
-        case "RectangularProduct":
+        case "Rectangular":
           updatedProduct = await RectangularProduct.findByIdAndUpdate(objectId, updateData, {
             new: true,
             runValidators: true,
           });
           break;
-        case "CircularProduct":
+        case "Circular":
           updatedProduct = await CircularProduct.findByIdAndUpdate(objectId, updateData, {
             new: true,
             runValidators: true,
           });
           break;
-        case "SquareProduct":
+        case "Square":
           updatedProduct = await SquareProduct.findByIdAndUpdate(objectId, updateData, {
             new: true,
             runValidators: true,
@@ -139,7 +139,4 @@ export const productIpcHandlers = (): void => {
       throw error;
     }
   });
-  
-  
-
 };

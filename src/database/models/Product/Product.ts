@@ -15,7 +15,7 @@ interface IProduct extends Document {
   quantity: number;
   cost: number;
   unitPrice: number;
-  shape: "RectangularProduct" | "SquareProduct" | "CircularProduct";
+  shape: "Rectangular" | "Square" | "Circular";
   width?: number;
   height?: number;
   sideLength?: number;
@@ -76,19 +76,19 @@ const SquareProductSchema = new Schema<ISquareProduct>({
 
 // Discriminators
 const RectangularProduct = Product.discriminator<IRectangularProduct>(
-  "RectangularProduct",
+  "Rectangular",
   RectangularProductSchema
 );
 
 const CircularProduct = Product.discriminator<ICircularProduct>(
-  "CircularProduct",
+  "Circular",
   CircularProductSchema
 );
 
 const SquareProduct = Product.discriminator<ISquareProduct>(
-  "SquareProduct",
+  "Square",
   SquareProductSchema
 );
 
 // Export models
-export { Product, RectangularProduct, CircularProduct, SquareProduct };
+export {IProduct, Product, RectangularProduct, CircularProduct, SquareProduct };

@@ -118,13 +118,13 @@ const ProductDetail: React.FC = () => {
             value={formik.values.shape}
             onChange={formik.handleChange}
           >
-           <MenuItem value="RectangularProduct">Rectangular</MenuItem>
-           <MenuItem value="SquareProduct">Square</MenuItem>
-           <MenuItem value="CircularProduct">Circular</MenuItem>
+           <MenuItem value="Rectangular">Rectangular</MenuItem>
+           <MenuItem value="Square">Square</MenuItem>
+           <MenuItem value="Circular">Circular</MenuItem>
           </Select>
         </FormControl>
 
-        {formik.values.shape === "CircularProduct" && (
+        {formik.values.shape === "Circular" && (
           <TextField
             fullWidth
             label="Radius"
@@ -138,7 +138,7 @@ const ProductDetail: React.FC = () => {
           />
         )}
 
-        {formik.values.shape === "RectangularProduct" && (
+        {formik.values.shape === "Rectangular" && (
           <>
             <TextField
               fullWidth
@@ -165,7 +165,7 @@ const ProductDetail: React.FC = () => {
           </>
         )}
 
-        {formik.values.shape === "SquareProduct" && (
+        {formik.values.shape === "Square" && (
           <TextField
             fullWidth
             label="Side Length"

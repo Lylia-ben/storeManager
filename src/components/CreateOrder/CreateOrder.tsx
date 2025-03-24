@@ -4,9 +4,9 @@ import CustomerSelector from "../CustomerSelector/CustomerSelector";
 import ProductShapeSelector from "../ShapeSelector/ShapeSelector";
 import ProductSelector from "../ProductSelector/ProductSelector";
 import OrderTable from "../OrderTable/OrderTable";
-
+import { v4 as uuidv4 } from "uuid"; // Import UUID generator
 // Define the ProductShape type
-type ProductShape = "Square" | "Circular" | "Rectangular";
+type ProductShape = "Rectangular" | "Circular" | "Square";
 
 const CreateOrder: React.FC = () => {
   const [customerId, setCustomerId] = useState<string>("");
@@ -17,6 +17,7 @@ const CreateOrder: React.FC = () => {
       name: string;
       quantity: number;
       unitPrice: number;
+      cost:number;
       shape: ProductShape; // ✅ Explicitly type `shape` as `ProductShape`
       width?: number;
       height?: number;
@@ -69,25 +70,28 @@ const CreateOrder: React.FC = () => {
       alert("Please select a customer and at least one product.");
       return;
     }
-
+  
     const orderData = {
       customerId,
       orderItems: selectedProducts.map((p) => ({
-        productName: p.name, // ✅ Added `productName`
-        shape: p.shape, // ✅ `shape` is already of type `ProductShape`
-        dimensions:
-          p.shape === "Rectangular"
-            ? `Width: ${p.width}cm, Height: ${p.height}cm`
-            : p.shape === "Square"
-            ? `Side: ${p.sideLength}cm`
-            : `Radius: ${p.radius}cm`, // ✅ Added `dimensions`
-        quantity: p.quantity, // ✅ Added `quantity`
-        unitPrice: p.unitPrice, // ✅ Added `unitPrice`
+        id: uuidv4(), // ✅ Generate a unique ID for each order item
+        productId: p.id,
+        customerQuantity: p.quantity,
+        name: p.name,
+        cost: p.cost,
+        quantity: p.quantity,
+        unitPrice: p.unitPrice,
+        totalAmount: p.quantity * p.unitPrice,
+        shape: p.shape,
+        width: p.width,
+        height: p.height,
+        sideLength: p.sideLength,
+        radius: p.radius,
       })),
     };
-
-    console.log("Final Order Data:", orderData); // Debugging
-
+  
+    console.log("Final Order Data:", orderData);
+  
     try {
       const response = await window.electronAPI.createOrder(orderData);
       console.log("Order Response:", response);
