@@ -113,6 +113,22 @@ declare global {
     cost: number;
     totalAmount: number;
   }
+  // Define the type for Excel row data
+  type ExcelRow = {
+    'Product Name': string;
+    'Shape': "Rectangular" | "Square" | "Circular";
+    'Dimensions': string;
+    'Quantity': number;
+    'Unit Price': string;
+    'Total': string;
+  } | {
+    'Product Name': string;
+    'Shape': '';
+    'Dimensions': '';
+    'Quantity': '';
+    'Unit Price': '';
+    'Total': string;
+  };
 }
 
 export {};

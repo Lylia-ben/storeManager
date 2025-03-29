@@ -49,9 +49,10 @@ const CreateCustomer: React.FC = () => {
       elevation={3}
       sx={{
         maxWidth: 900,
-        margin: "50px auto",
+        marginTop: "50px",
         padding: 3,
         borderRadius: 2,
+        marginLeft:"250px"
       }}
     >
       {/* Title */}

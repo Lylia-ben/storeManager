@@ -54,7 +54,7 @@ const CustomersTable: React.FC = () => {
   
 
   return (
-    <Paper elevation={3} sx={{ padding: 3 }}>
+    <Paper elevation={3} sx={{ padding: 3, marginLeft:"250px" }}>
       <Typography variant="h6" component="h2" mb={2} textAlign="center">
         Customers List
       </Typography>

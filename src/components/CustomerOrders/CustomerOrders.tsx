@@ -16,43 +16,47 @@ import {
   MenuItem,
 } from "@mui/material";
 
+
 interface CustomerOrdersProps {
   customerId: string;
+  onOrdersLoaded: (orders: Order[]) => void;
 }
 
-const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
+const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId, onOrdersLoaded }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Customer ID in frontend:", customerId); // Debugging line
     const fetchOrders = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         const response = await window.electronAPI.fetchOrdersByCustomerId(customerId);
-        console.log("API Response:", response); // Debugging line
-
-        if (!response || !response.success) {
-          setError(response?.message || "Failed to fetch orders");
-          return;
+        
+        if (!response?.success) {
+          throw new Error(response?.message || "Failed to fetch orders");
         }
 
-        const formattedOrders: Order[] = response.data.map((order: any) => ({
-          id: String(order.id || order._id),
-          customerId: order.customerId || "", // ✅ Use `customerId`
-          orderItems: Array.isArray(order.orderItems) ? order.orderItems : [],
-          total: !isNaN(order.total) ? Number(order.total) : 0, // ✅ Use `total`
-          status: order.status === "paid" ? "paid" : "not paid",
-          createdAt: order.createdAt || new Date().toISOString(),
-          updatedAt: order.updatedAt || new Date().toISOString(),
-        }));
+        const formattedOrders: Order[] = response.data?.map((order: Order) => ({
+          ...order,
+          id: String(order.id),
+          customerId: order.customerId || customerId,
+          orderItems: order.orderItems.map(item => ({
+            ...item,
+            customerQuantity: Number(item.customerQuantity) || 0,
+            unitPrice: Number(item.unitPrice) || 0
+          })),
+          total: Number(order.total) || 0
+        })) || [];
 
         setOrders(formattedOrders);
+        onOrdersLoaded(formattedOrders);
       } catch (err) {
         console.error("Error fetching orders:", err);
-        setError("An error occurred while fetching orders");
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
       } finally {
         setLoading(false);
       }
@@ -61,7 +65,7 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
     if (customerId) {
       fetchOrders();
     }
-  }, [customerId]);
+  }, [customerId, onOrdersLoaded]);
 
   const toggleOrderStatus = async (orderId: string, currentStatus: "paid" | "not paid") => {
     try {
@@ -76,9 +80,16 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
+    
     try {
-      setOrders((prev) => prev.filter((order) => order.id !== orderId));
-      await window.electronAPI.deleteOrder(orderId);
+      const response = await window.electronAPI.deleteOrder(orderId);
+      
+      if (response.success) {
+        const updatedOrders = orders.filter(order => order.id !== orderId);
+        setOrders(updatedOrders);
+        onOrdersLoaded(updatedOrders);
+      }
     } catch (err) {
       console.error("Error deleting order:", err);
     }
@@ -87,21 +98,32 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ customerId }) => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
+        <CircularProgress size={60} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Typography color="error" textAlign="center" mt={4}>
-        {error}
-      </Typography>
+      <Box textAlign="center" mt={4}>
+        <Typography color="error" variant="h6" gutterBottom>
+          Error Loading Orders
+        </Typography>
+        <Typography color="textSecondary">{error}</Typography>
+        <Button 
+          variant="outlined" 
+          color="primary" 
+          sx={{ mt: 2 }}
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </Button>
+      </Box>
     );
   }
 
   return (
-    <TableContainer component={Paper} sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
+    <TableContainer component={Paper} sx={{ maxWidth: 800, mx: "auto", mt: 4,marginLeft:"250px" }}>
       <Table>
         <TableHead>
           <TableRow>
